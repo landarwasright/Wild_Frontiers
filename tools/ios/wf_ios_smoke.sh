@@ -19,6 +19,7 @@ WF_ARTIFACT_ROOT=${WF_ARTIFACT_ROOT:-$ROOT_DIR/working/ios-smoke}
 WF_LAUNCH_DELAY=${WF_LAUNCH_DELAY:-8}
 WF_USE_DEBUG_OVERLAY=${WF_USE_DEBUG_OVERLAY:-1}
 WF_NOCACHE=${WF_NOCACHE:-1}
+WF_ADVANCE_TIMEOUT=${WF_ADVANCE_TIMEOUT:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
 ARTIFACT_DIR="$WF_ARTIFACT_ROOT/$timestamp"
@@ -210,6 +211,32 @@ error_check() {
   rm -f "$ARTIFACT_DIR/errors.txt"
 }
 
+wait_for_log_text() {
+  local log_path=$1
+  local needle=$2
+  local timeout=${3:-60}
+  local deadline=$((SECONDS + timeout))
+
+  while (( SECONDS < deadline )); do
+    if [[ -f "$log_path" ]] && rg -Fq "$needle" "$log_path"; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "Timed out waiting for log text: $needle" >&2
+  return 1
+}
+
+extract_log_turn() {
+  local log_path=$1
+
+  rg -o 'WF_AUTOMATION side1_turn_refresh turn=[0-9]+' "$log_path" 2>/dev/null \
+    | sed 's/.*=//' \
+    | sort -n \
+    | tail -n 1
+}
+
 extract_turn_number() {
   local text_path=$1
 
@@ -235,27 +262,55 @@ capture_turn_number() {
 }
 
 advance_turns() {
-  local turns=$1
-  local initial_turn
-  initial_turn=$(extract_turn_number "$ARTIFACT_DIR/post-start.txt")
-  if [[ -z "$initial_turn" ]]; then
-    echo "Unable to detect the initial turn from OCR" >&2
-    return 1
-  fi
+  local log_path=$1
+  local turns=$2
+  local initial_turn=1
   local target_turn=$((initial_turn + turns))
   local seen_turn=$initial_turn
-  local deadline=$((SECONDS + 180))
+  local timeout=$WF_ADVANCE_TIMEOUT
+  local use_log=0
+  local max_turn=""
+  local current_turn=""
+  local turn=""
+  if (( timeout <= 0 )); then
+    timeout=$((120 + (turns * 60)))
+  fi
+  local deadline=$((SECONDS + timeout))
+
+  capture_and_ocr "turn-$initial_turn"
 
   while (( SECONDS < deadline )); do
-    local current_turn
-    current_turn=$(capture_turn_number "turn-scan")
-    if [[ -n "$current_turn" ]]; then
-      if (( current_turn > seen_turn )); then
-        capture_and_ocr "turn-$current_turn"
-        seen_turn=$current_turn
+    max_turn=$(extract_log_turn "$log_path")
+    if [[ -n "$max_turn" ]]; then
+      use_log=1
+    fi
+
+    if (( use_log == 1 )); then
+      if [[ -n "$max_turn" ]]; then
+        if (( max_turn > seen_turn )); then
+          for turn in $(seq $((seen_turn + 1)) "$max_turn"); do
+            capture_and_ocr "turn-$turn"
+          done
+          seen_turn=$max_turn
+        fi
+        if (( max_turn >= target_turn )); then
+          return 0
+        fi
       fi
-      if (( current_turn >= target_turn )); then
-        return 0
+    else
+      current_turn=$(capture_turn_number "turn-scan")
+      if [[ -n "$current_turn" ]]; then
+        if (( current_turn > target_turn || current_turn > seen_turn + 2 )); then
+          sleep 2
+          continue
+        fi
+        if (( current_turn > seen_turn )); then
+          capture_and_ocr "turn-$current_turn"
+          seen_turn=$current_turn
+        fi
+        if (( current_turn >= target_turn )); then
+          return 0
+        fi
       fi
     fi
     sleep 2
@@ -304,16 +359,20 @@ main() {
     "Starting game..." \
     "Reading files and creating cache..."
 
-  advance_turns "$WF_END_TURNS"
+  local run_status=0
+  advance_turns "$log_path" "$WF_END_TURNS" || run_status=$?
 
   local after_log
   after_log=$(latest_log "$container")
   log_path="$container/Library/Application Support/wesnoth.org/iWesnoth/logs/$after_log"
   cp "$log_path" "$ARTIFACT_DIR/$after_log"
-  error_check "$log_path"
+  error_check "$log_path" || run_status=$?
 
   local reached_turn
-  reached_turn=$(extract_turn_number "$ARTIFACT_DIR/turn-scan.txt")
+  reached_turn=$(extract_log_turn "$log_path")
+  if [[ -z "$reached_turn" && -f "$ARTIFACT_DIR/turn-scan.txt" ]]; then
+    reached_turn=$(extract_turn_number "$ARTIFACT_DIR/turn-scan.txt")
+  fi
 
   {
     echo "artifact_dir=$ARTIFACT_DIR"
@@ -322,7 +381,10 @@ main() {
     echo "after_log=$after_log"
     echo "turns=$WF_END_TURNS"
     echo "reached_turn=$reached_turn"
+    echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
+
+  return "$run_status"
 }
 
 main "$@"
