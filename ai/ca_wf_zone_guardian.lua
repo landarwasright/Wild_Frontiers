@@ -23,7 +23,7 @@ end
 
 function ca_wf_zone_guardian:execution(cfg)
     local guardian = wf_get_guardian(cfg)
-    local reach = wesnoth.find_reach(guardian)
+    local reach = wesnoth.paths.find_reach(guardian)
 
     local zone = wml.get_child(cfg, "filter_location")
     local zone_enemy = wml.get_child(cfg, "filter_location_enemy") or zone
@@ -44,11 +44,11 @@ function ca_wf_zone_guardian:execution(cfg)
             local best_defense, attack_loc = -9e99
             for xa,ya in H.adjacent_tiles(target.x, target.y) do
                 -- Only consider unoccupied hexes
-                local unit_in_way = wesnoth.get_unit(xa, ya)
+                local unit_in_way = wesnoth.units.get(xa, ya)
                 if (not AH.is_visible_unit(wesnoth.current.side, unit_in_way))
                     or (unit_in_way == guardian)
                 then
-                    local defense = 100 - wesnoth.unit_defense(guardian, wesnoth.get_terrain(xa, ya))
+                    local defense = guardian:defense_on(wesnoth.current.map[{xa, ya}])
                     local nh = AH.next_hop(guardian, xa, ya)
                     if nh then
                         if (nh[1] == xa) and (nh[2] == ya) and (defense > best_defense) then
@@ -62,14 +62,14 @@ function ca_wf_zone_guardian:execution(cfg)
             if attack_loc then
                 AH.robust_move_and_attack(ai, guardian, attack_loc, target)
             else  -- Otherwise move toward that enemy
-                local reach = wesnoth.find_reach(guardian)
+                local reach = wesnoth.paths.find_reach(guardian)
 
                 -- Go through all hexes the guardian can reach, find closest to target
                 -- Cannot use next_hop here since target hex is occupied by enemy
                 local min_dist, nh = 9e99
                 for _,hex in ipairs(reach) do
                     -- Only consider unoccupied hexes
-                    local unit_in_way = wesnoth.get_unit(hex[1], hex[2])
+                    local unit_in_way = wesnoth.units.get(hex[1], hex[2])
                     if (not AH.is_visible_unit(wesnoth.current.side, unit_in_way))
                         or (unit_in_way == guardian)
                     then
@@ -90,7 +90,7 @@ function ca_wf_zone_guardian:execution(cfg)
 
 	if (guardian.hitpoints < guardian.max_hitpoints) then
                 --local villages = (wesnoth.get_villages {
-                local villages = (wesnoth.get_locations {
+                local villages = (wesnoth.map.find {
                     include_borders = false,
                     terrain = '*^V*,*^Yt*',
                     { "and", {
@@ -102,7 +102,7 @@ function ca_wf_zone_guardian:execution(cfg)
 
 		if villages ~= nil and (#villages > 0) then
 			for i = #villages,1,-1 do
-				local unit_in_way = wesnoth.get_unit(villages[i][1], villages[i][2])
+				local unit_in_way = wesnoth.units.get(villages[i][1], villages[i][2])
 				if unit_in_way ~= nil then
 					if (unit_in_way == guardian) then
 						newpos = { villages[i][1], villages[i][2]}
@@ -129,15 +129,16 @@ function ca_wf_zone_guardian:execution(cfg)
 	            newpos = { cfg.station_x, cfg.station_y }
 	        -- Otherwise choose one randomly from those given in filter_location
 	        else
-	            local width, height = wesnoth.get_map_size()
-	            local locs_map = LS.of_pairs(wesnoth.get_locations {
+	            local map = wesnoth.current.map
+	            local width, height = map.playable_width, map.playable_height
+	            local locs_map = LS.of_pairs(wesnoth.map.find {
 	                x = '1-' .. width,
 	                y = '1-' .. height,
 	                { "and", zone }
 	            })
 
 	            -- Check out which of those hexes the guardian can reach
-	            local reach_map = LS.of_pairs(wesnoth.find_reach(guardian))
+	            local reach_map = LS.of_pairs(wesnoth.paths.find_reach(guardian))
 	            reach_map:inter(locs_map)
 
 	            -- If it can reach some hexes, use only reachable locations,
@@ -160,7 +161,7 @@ function ca_wf_zone_guardian:execution(cfg)
         -- Next hop toward that position
         local nh = AH.next_hop(guardian, newpos[1], newpos[2])
         if nh then
-            local unit_in_way = wesnoth.get_unit(nh[1], nh[2])
+            local unit_in_way = wesnoth.units.get(nh[1], nh[2])
             if (not unit_in_way) then
                 AH.movefull_stopunit(ai, guardian, nh)
             else

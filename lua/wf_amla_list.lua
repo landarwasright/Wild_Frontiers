@@ -570,7 +570,7 @@ function wf_do_amla_menu(cfg)
 	local u = nil
 
 	if pos.x and pos.y then
-		u = wesnoth.get_unit(pos.x, pos.y)
+		u = wesnoth.units.get(pos.x, pos.y)
 	end
 
 	if not u then

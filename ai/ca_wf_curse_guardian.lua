@@ -36,7 +36,7 @@ end
 function ca_wf_curse_guardian:execution(cfg)
     local guardian = wf_get_guardian(cfg)
     local enemies = wf_get_targets(cfg)
-    local reach = wesnoth.find_reach(guardian)
+    local reach = wesnoth.paths.find_reach(guardian)
 
     if enemies[1] then
         local min_dist, target = 9e99
@@ -54,11 +54,11 @@ function ca_wf_curse_guardian:execution(cfg)
             local best_defense, attack_loc = -9e99
             for xa,ya in H.adjacent_tiles(target.x, target.y) do
                 -- Only consider unoccupied hexes
-                local unit_in_way = wesnoth.get_unit(xa, ya)
+                local unit_in_way = wesnoth.units.get(xa, ya)
                 if (not AH.is_visible_unit(wesnoth.current.side, unit_in_way))
                     or (unit_in_way == guardian)
                 then
-                    local defense = 100 - wesnoth.unit_defense(guardian, wesnoth.get_terrain(xa, ya))
+                    local defense = guardian:defense_on(wesnoth.current.map[{xa, ya}])
                     local nh = AH.next_hop(guardian, xa, ya)
                     if nh then
                         if (nh[1] == xa) and (nh[2] == ya) and (defense > best_defense) then
@@ -72,14 +72,14 @@ function ca_wf_curse_guardian:execution(cfg)
             if attack_loc then
                 AH.robust_move_and_attack(ai, guardian, attack_loc, target)
             else  -- Otherwise move toward that enemy
-                local reach = wesnoth.find_reach(guardian)
+                local reach = wesnoth.paths.find_reach(guardian)
 
                 -- Go through all hexes the guardian can reach, find closest to target
                 -- Cannot use next_hop here since target hex is occupied by enemy
                 local min_dist, nh = 9e99
                 for _,hex in ipairs(reach) do
                     -- Only consider unoccupied hexes
-                    local unit_in_way = wesnoth.get_unit(hex[1], hex[2])
+                    local unit_in_way = wesnoth.units.get(hex[1], hex[2])
                     if (not AH.is_visible_unit(wesnoth.current.side, unit_in_way))
                         or (unit_in_way == guardian)
                     then

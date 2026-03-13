@@ -8,8 +8,8 @@ local MAISD = wesnoth.require "ai/micro_ais/micro_ai_self_data.lua"
 local M = wesnoth.map
 
 local function wf_custom_cost(x, y, unit, enemy_map, enemy_attack_map, multiplier)
-    local terrain = wesnoth.get_terrain(x, y)
-    local move_cost = wesnoth.unit_movement_cost(unit, terrain)
+    local terrain = wesnoth.current.map[{x, y}]
+    local move_cost = wesnoth.units.movement_on(unit, terrain)
 
     move_cost = move_cost + (enemy_map:get(x,y) or 0)
     move_cost = move_cost + (enemy_attack_map.units:get(x,y) or 0) * multiplier
@@ -46,8 +46,9 @@ function ca_wf_goto:evaluation(cfg, data)
 
     -- For convenience, we check for locations here, and just pass that to the exec function
     -- This is mostly to make the unique_goals option easier
-    local width, height = wesnoth.get_map_size()
-    local all_locs = wesnoth.get_locations {
+    local map = wesnoth.current.map
+    local width, height = map.playable_width, map.playable_height
+    local all_locs = wesnoth.map.find {
         x = '1-' .. width,
         y = '1-' .. height,
         { "and", wml.get_child(cfg, "filter_location") }
@@ -141,7 +142,7 @@ function ca_wf_goto:execution(cfg, data)
             else  -- Otherwise find the best path to take
                 local path, cost
                 if avoid_enemies then
-                    path, cost = wesnoth.find_path(unit, loc[1], loc[2], {
+                    path, cost = wesnoth.paths.find_path(unit, loc[1], loc[2], {
                         calculate = function(x, y, current_cost)
                             return wf_custom_cost(x, y, unit, enemy_map, enemy_attack_map, avoid_enemies)
                         end
@@ -149,16 +150,16 @@ function ca_wf_goto:execution(cfg, data)
                 else
                     local enemy_at_goal
                     if cfg.ignore_enemy_at_goal then
-                        enemy_at_goal = wesnoth.get_unit(loc[1], loc[2])
-                        if enemy_at_goal and wesnoth.is_enemy(wesnoth.current.side, enemy_at_goal.side) then
-                             wesnoth.extract_unit(enemy_at_goal)
+                        enemy_at_goal = wesnoth.units.get(loc[1], loc[2])
+                        if enemy_at_goal and wesnoth.sides.is_enemy(wesnoth.current.side, enemy_at_goal.side) then
+                             wesnoth.units.extract(enemy_at_goal)
                         else
                             enemy_at_goal = nil
                         end
                     end
                     path, cost = AH.find_path_with_shroud(unit, loc[1], loc[2], { ignore_units = cfg.ignore_units })
                     if enemy_at_goal then
-                        wesnoth.put_unit(enemy_at_goal)
+                        wesnoth.units.to_map(enemy_at_goal)
                         --- Give massive penalty for this goal hex
                         cost = cost + 100
                     end
@@ -170,7 +171,7 @@ function ca_wf_goto:execution(cfg, data)
                 local rating = - cost
 
                 -- Add a small penalty for hexes occupied by an allied unit
-                local unit_in_way = wesnoth.get_unit(loc[1], loc[2])
+                local unit_in_way = wesnoth.units.get(loc[1], loc[2])
                 if unit_in_way and (unit_in_way ~= unit) then
                     rating = rating - 0.01
                 end
@@ -207,7 +208,7 @@ function ca_wf_goto:execution(cfg, data)
     for i = 2,#best_path do
         local sub_path, sub_cost = AH.find_path_with_shroud(best_unit, best_path[i][1], best_path[i][2])
         if sub_cost <= best_unit.moves then
-            local unit_in_way = wesnoth.get_unit(best_path[i][1], best_path[i][2])
+            local unit_in_way = wesnoth.units.get(best_path[i][1], best_path[i][2])
             if (not AH.is_visible_unit(wesnoth.current.side, unit_in_way)) then
                 closest_hex = best_path[i]
             end
@@ -220,7 +221,7 @@ function ca_wf_goto:execution(cfg, data)
     if (remove_movement == nil) then remove_movement = true end
 
     if closest_hex then
-        local unit_in_way = wesnoth.get_unit(closest_hex[1], closest_hex[2])
+        local unit_in_way = wesnoth.units.get(closest_hex[1], closest_hex[2])
         if (not unit_in_way) then
             AH.checked_move_full(ai, best_unit, closest_hex[1], closest_hex[2])
         elseif remove_movement then

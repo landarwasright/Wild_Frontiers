@@ -47,7 +47,7 @@ local function comma_split(x_list,y_list)
 		t[i][2] = v
 	        i = i + 1
 	end
-	return table.unpack(t[wesnoth.random(1,#t)])
+	return table.unpack(t[mathx.random(1,#t)])
 end
 
 function mapgen_helper.random_location(x_list, y_list)
