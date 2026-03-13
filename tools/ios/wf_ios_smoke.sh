@@ -1,5 +1,6 @@
 #!/bin/zsh
 set -euo pipefail
+set +x
 
 SCRIPT_DIR=${0:A:h}
 ROOT_DIR=${SCRIPT_DIR:h:h}
@@ -22,14 +23,22 @@ WF_NOCACHE=${WF_NOCACHE:-1}
 WF_ADVANCE_TIMEOUT=${WF_ADVANCE_TIMEOUT:-0}
 WF_START_SCENARIO=${WF_START_SCENARIO:-A_New_Beginning}
 WF_NEXT_SCENARIO=${WF_NEXT_SCENARIO:-Summer_of_Dreams}
+WF_NEXT_END_TURNS=${WF_NEXT_END_TURNS:-0}
 WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
 WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
 WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
 WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
+WF_TRACE=${WF_TRACE:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
 ARTIFACT_DIR="$WF_ARTIFACT_ROOT/$timestamp"
 mkdir -p "$ARTIFACT_DIR"
+
+if [[ "$WF_TRACE" == "1" ]]; then
+  exec 3>"$ARTIFACT_DIR/trace.log"
+  XTRACEFD=3
+  set -x
+fi
 
 build_helper() {
   if [[ ! -x "$HELPER_BIN" || "$HELPER_SRC" -nt "$HELPER_BIN" ]]; then
@@ -81,6 +90,11 @@ capture_and_ocr() {
   local text_path="$ARTIFACT_DIR/$name.txt"
   xcrun simctl io "$SIMULATOR_UDID" screenshot "$image_path" >/dev/null 2>&1
   ocr_screenshot "$image_path" | tee "$text_path" >/dev/null
+}
+
+note_progress() {
+  local message=$1
+  printf '%s %s\n' "$(date +"%H:%M:%S")" "$message" >> "$ARTIFACT_DIR/progress.log"
 }
 
 wait_for_text() {
@@ -287,6 +301,10 @@ wait_for_new_log() {
   return 1
 }
 
+normalize_line_value() {
+  printf '%s\n' "$1" | sed '/^$/d' | tail -n 1
+}
+
 error_check() {
   local log_path=$1
   if rg -n "error scripting/lua:|error wml:|Error occured inside|traceback|critical|fatal" "$log_path" >"$ARTIFACT_DIR/errors.txt"; then
@@ -352,6 +370,7 @@ advance_turns() {
   local log_path=$1
   local turns=$2
   local scenario_id=$3
+  local artifact_prefix=$4
   local initial_turn=1
   local target_turn=$((initial_turn + turns))
   local seen_turn=$initial_turn
@@ -365,7 +384,7 @@ advance_turns() {
   fi
   local deadline=$((SECONDS + timeout))
 
-  capture_and_ocr "turn-$initial_turn"
+  capture_and_ocr "${artifact_prefix}-${initial_turn}"
 
   while (( SECONDS < deadline )); do
     max_turn=$(extract_log_turn "$log_path" "$scenario_id")
@@ -377,7 +396,7 @@ advance_turns() {
       if [[ -n "$max_turn" ]]; then
         if (( max_turn > seen_turn )); then
           for turn in $(seq $((seen_turn + 1)) "$max_turn"); do
-            capture_and_ocr "turn-$turn"
+            capture_and_ocr "${artifact_prefix}-${turn}"
           done
           seen_turn=$max_turn
         fi
@@ -393,7 +412,7 @@ advance_turns() {
           continue
         fi
         if (( current_turn > seen_turn )); then
-          capture_and_ocr "turn-$current_turn"
+          capture_and_ocr "${artifact_prefix}-${current_turn}"
           seen_turn=$current_turn
         fi
         if (( current_turn >= target_turn )); then
@@ -411,10 +430,12 @@ advance_turns() {
 main() {
   build_helper
   ensure_simulator
+  note_progress "simulator_ready"
 
   local container
   container=$(find_container)
   sync_addon "$container"
+  note_progress "addon_synced"
 
   local before_log
   before_log=$(latest_log "$container")
@@ -427,10 +448,13 @@ main() {
 
   xcrun simctl terminate "$SIMULATOR_UDID" "$WESNOTH_BUNDLE_ID" >/dev/null 2>&1 || true
   xcrun simctl launch "$SIMULATOR_UDID" "$WESNOTH_BUNDLE_ID" "${launch_args[@]}"
+  note_progress "app_launched"
 
   local run_log_name
   run_log_name=$(wait_for_new_log "$container" "$before_log")
+  run_log_name=$(normalize_line_value "$run_log_name")
   local log_path="$container/Library/Application Support/wesnoth.org/iWesnoth/logs/$run_log_name"
+  note_progress "log_detected $run_log_name"
 
   sleep "$WF_LAUNCH_DELAY"
   wait_for_text "Which type would you like to use?" "economy-dialog" 180
@@ -446,27 +470,41 @@ main() {
     "Nevermind" \
     "Starting game..." \
     "Reading files and creating cache..."
+  note_progress "startup_complete"
 
   local run_status=0
-  advance_turns "$log_path" "$WF_END_TURNS" "$WF_START_SCENARIO" || run_status=$?
-
-  local after_log
-  after_log=$(latest_log "$container")
-  log_path="$container/Library/Application Support/wesnoth.org/iWesnoth/logs/$after_log"
-  cp "$log_path" "$ARTIFACT_DIR/$after_log"
-  error_check "$log_path" || run_status=$?
+  advance_turns "$log_path" "$WF_END_TURNS" "$WF_START_SCENARIO" "turn" || run_status=$?
+  note_progress "start_scenario_complete status=$run_status"
 
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     wait_for_log_text "$log_path" "WF_AUTOMATION event=wf_victory scenario=$WF_START_SCENARIO next=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    note_progress "next_scenario_victory_marker status=$run_status"
     wait_for_log_text "$log_path" "WF_AUTOMATION overlay_ready scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    note_progress "next_scenario_overlay_ready status=$run_status"
     wait_for_log_text "$log_path" "WF_AUTOMATION side1_turn_refresh scenario=$WF_NEXT_SCENARIO turn=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
-    capture_and_ocr "transition-$WF_NEXT_SCENARIO"
+    note_progress "next_scenario_turn1 status=$run_status"
+    if (( WF_NEXT_END_TURNS > 0 )); then
+      advance_turns "$log_path" "$WF_NEXT_END_TURNS" "$WF_NEXT_SCENARIO" "${WF_NEXT_SCENARIO}-turn" || run_status=$?
+      note_progress "next_scenario_complete status=$run_status"
+    fi
   fi
+
+  local after_log
+  after_log=$(latest_log "$container")
+  after_log=$(normalize_line_value "$after_log")
+  log_path="$container/Library/Application Support/wesnoth.org/iWesnoth/logs/$after_log"
+  cp "$log_path" "$ARTIFACT_DIR/$after_log"
+  error_check "$log_path" || run_status=$?
+  note_progress "final_log_copied status=$run_status"
 
   local reached_turn
   reached_turn=$(extract_log_turn "$log_path" "$WF_START_SCENARIO")
   if [[ -z "$reached_turn" && -f "$ARTIFACT_DIR/turn-scan.txt" ]]; then
     reached_turn=$(extract_turn_number "$ARTIFACT_DIR/turn-scan.txt")
+  fi
+  local next_reached_turn=""
+  if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
+    next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
   fi
 
   {
@@ -476,8 +514,11 @@ main() {
     echo "after_log=$after_log"
     echo "turns=$WF_END_TURNS"
     echo "reached_turn=$reached_turn"
+    echo "next_turns=$WF_NEXT_END_TURNS"
+    echo "next_reached_turn=$next_reached_turn"
     echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
+  note_progress "summary_written status=$run_status"
 
   return "$run_status"
 }
