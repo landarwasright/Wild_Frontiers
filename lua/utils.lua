@@ -53,7 +53,7 @@ end
 
 function wesnoth.wml_actions.load_map(cfg)
   local v = cfg.variable or helper.wml_error("load_map missing required variable= attribute.")
-  wesnoth.fire("replace_map", { map = wml.variables[v], expand = true, shrink = true })
+  wesnoth.wml_actions.replace_map { map = wml.variables[v], expand = true, shrink = true }
 end
 
 
@@ -78,12 +78,12 @@ function wesnoth.wml_actions.set_shroud(args)
       local shroud_x = 1 - b
       for r in string.gmatch(shroud, "|(%d*)") do
          local shroud_y = 1 - b
-         for c in string.gmatch(r, "%d") do
-            if c == "1" then
-               wesnoth.fire("remove_shroud", { side=team_num, x=shroud_x, y=shroud_y })
-            end
-            shroud_y = shroud_y + 1
-         end
+	         for c in string.gmatch(r, "%d") do
+	            if c == "1" then
+	               wesnoth.wml_actions.remove_shroud { side=team_num, x=shroud_x, y=shroud_y }
+	            end
+	            shroud_y = shroud_y + 1
+	         end
          shroud_x = shroud_x + 1
       end
    end
@@ -93,8 +93,7 @@ function wesnoth.wml_actions.deselect()
   wesnoth.delay(600)
   wesnoth.units.select(nil, true)
   wesnoth.deselect_hex()
-  wesnoth.fire("redraw")
---  wesnoth.wml_actions.redraw {}
+  wesnoth.wml_actions.redraw {}
 end
 
 local LS = wesnoth.require "location_set"

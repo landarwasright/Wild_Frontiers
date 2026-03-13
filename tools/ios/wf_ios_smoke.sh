@@ -20,6 +20,12 @@ WF_LAUNCH_DELAY=${WF_LAUNCH_DELAY:-8}
 WF_USE_DEBUG_OVERLAY=${WF_USE_DEBUG_OVERLAY:-1}
 WF_NOCACHE=${WF_NOCACHE:-1}
 WF_ADVANCE_TIMEOUT=${WF_ADVANCE_TIMEOUT:-0}
+WF_START_SCENARIO=${WF_START_SCENARIO:-A_New_Beginning}
+WF_NEXT_SCENARIO=${WF_NEXT_SCENARIO:-Summer_of_Dreams}
+WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
+WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
+WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
+WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
 ARTIFACT_DIR="$WF_ARTIFACT_ROOT/$timestamp"
@@ -125,11 +131,11 @@ find_container() {
 }
 
 inject_debug_overlay() {
-  local addon_dir=$1
-  local scenario_path="$addon_dir/scenarios/a_new_beginning.cfg"
+  local scenario_path=$1
+  local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" '
     /^\[\/scenario\]$/ && !inserted {
       print ""
       print "[event]"
@@ -142,21 +148,100 @@ inject_debug_overlay() {
       print "    [/modify_side]"
       print "    [lua]"
       print "        code=<<"
-      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION overlay_ready\")"
+      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION overlay_ready scenario=" scenario_id "\")"
       print "        >>"
       print "    [/lua]"
       print "[/event]"
+      if (scenario_id == "A_New_Beginning" && force_keep == "1") {
+        print ""
+        print "[event]"
+        print "    name=start"
+        print "    [store_unit]"
+        print "        [filter]"
+        print "            id=Hero"
+        print "        [/filter]"
+        print "        variable=wf_automation.hero"
+        print "    [/store_unit]"
+        print "    [terrain]"
+        print "        x,y=$wf_automation.hero.x,$wf_automation.hero.y"
+        print "        terrain=Ke^Yk"
+        print "    [/terrain]"
+        print "    [set_variable]"
+        print "        name=wf_vars.town_name"
+        print "        value=Town center"
+        print "    [/set_variable]"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_keep scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        print "    [clear_variable]"
+        print "        name=wf_automation.hero"
+        print "    [/clear_variable]"
+        print "[/event]"
+      }
       print ""
       print "[event]"
       print "    name=side 1 turn refresh"
       print "    first_time_only=no"
       print "    [lua]"
       print "        code=<<"
-      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION side1_turn_refresh turn=\" .. tostring(wml.variables[\"turn_number\"]))"
+      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION side1_turn_refresh scenario=" scenario_id " turn=\" .. tostring(wml.variables[\"turn_number\"]))"
       print "        >>"
       print "    [/lua]"
-      print "    [end_turn]"
-      print "    [/end_turn]"
+      if (scenario_id == "A_New_Beginning" && force_season_end == "1") {
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        print "    [fire_event]"
+        print "        name=wf_time_over"
+        print "    [/fire_event]"
+      } else {
+        print "    [end_turn]"
+        print "    [/end_turn]"
+      }
+      print "[/event]"
+      print ""
+      print "[event]"
+      print "    name=wf_time_over"
+      print "    [lua]"
+      print "        code=<<"
+      print "            local next_scenario = tostring(wml.variables[\"wf_vars.next_scenario\"] or \"\")"
+      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=wf_time_over scenario=" scenario_id " next=\" .. next_scenario)"
+      print "        >>"
+      print "    [/lua]"
+      print "[/event]"
+      print ""
+      print "[event]"
+      print "    name=wf_victory"
+      print "    [lua]"
+      print "        code=<<"
+      print "            local next_scenario = tostring(wml.variables[\"wf_vars.next_scenario\"] or \"\")"
+      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=wf_victory scenario=" scenario_id " next=\" .. next_scenario)"
+      print "        >>"
+      print "    [/lua]"
+      print "[/event]"
+      print ""
+      print "[event]"
+      print "    name=time_over"
+      print "    [lua]"
+      print "        code=<<"
+      print "            local next_scenario = tostring(wml.variables[\"wf_vars.next_scenario\"] or \"\")"
+      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=time_over scenario=" scenario_id " next=\" .. next_scenario)"
+      print "        >>"
+      print "    [/lua]"
+      print "[/event]"
+      print ""
+      print "[event]"
+      print "    name=victory"
+      print "    [lua]"
+      print "        code=<<"
+      print "            local next_scenario = tostring(wml.variables[\"wf_vars.next_scenario\"] or \"\")"
+      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=victory scenario=" scenario_id " next=\" .. next_scenario)"
+      print "        >>"
+      print "    [/lua]"
       print "[/event]"
       inserted=1
     }
@@ -172,7 +257,8 @@ sync_addon() {
   mkdir -p "$addon_dir"
   rsync -a --delete --exclude='.git/' "$ROOT_DIR/" "$addon_dir/"
   if [[ "$WF_USE_DEBUG_OVERLAY" == "1" ]]; then
-    inject_debug_overlay "$addon_dir"
+    inject_debug_overlay "$addon_dir/scenarios/a_new_beginning.cfg" "A_New_Beginning"
+    inject_debug_overlay "$addon_dir/scenarios/summer_of_dreams.cfg" "Summer_of_Dreams"
   fi
 }
 
@@ -230,8 +316,9 @@ wait_for_log_text() {
 
 extract_log_turn() {
   local log_path=$1
+  local scenario_id=$2
 
-  rg -o 'WF_AUTOMATION side1_turn_refresh turn=[0-9]+' "$log_path" 2>/dev/null \
+  rg -o "WF_AUTOMATION side1_turn_refresh scenario=${scenario_id} turn=[0-9]+" "$log_path" 2>/dev/null \
     | sed 's/.*=//' \
     | sort -n \
     | tail -n 1
@@ -264,6 +351,7 @@ capture_turn_number() {
 advance_turns() {
   local log_path=$1
   local turns=$2
+  local scenario_id=$3
   local initial_turn=1
   local target_turn=$((initial_turn + turns))
   local seen_turn=$initial_turn
@@ -280,7 +368,7 @@ advance_turns() {
   capture_and_ocr "turn-$initial_turn"
 
   while (( SECONDS < deadline )); do
-    max_turn=$(extract_log_turn "$log_path")
+    max_turn=$(extract_log_turn "$log_path" "$scenario_id")
     if [[ -n "$max_turn" ]]; then
       use_log=1
     fi
@@ -360,7 +448,7 @@ main() {
     "Reading files and creating cache..."
 
   local run_status=0
-  advance_turns "$log_path" "$WF_END_TURNS" || run_status=$?
+  advance_turns "$log_path" "$WF_END_TURNS" "$WF_START_SCENARIO" || run_status=$?
 
   local after_log
   after_log=$(latest_log "$container")
@@ -368,8 +456,15 @@ main() {
   cp "$log_path" "$ARTIFACT_DIR/$after_log"
   error_check "$log_path" || run_status=$?
 
+  if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
+    wait_for_log_text "$log_path" "WF_AUTOMATION event=wf_victory scenario=$WF_START_SCENARIO next=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    wait_for_log_text "$log_path" "WF_AUTOMATION overlay_ready scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    wait_for_log_text "$log_path" "WF_AUTOMATION side1_turn_refresh scenario=$WF_NEXT_SCENARIO turn=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    capture_and_ocr "transition-$WF_NEXT_SCENARIO"
+  fi
+
   local reached_turn
-  reached_turn=$(extract_log_turn "$log_path")
+  reached_turn=$(extract_log_turn "$log_path" "$WF_START_SCENARIO")
   if [[ -z "$reached_turn" && -f "$ARTIFACT_DIR/turn-scan.txt" ]]; then
     reached_turn=$(extract_turn_number "$ARTIFACT_DIR/turn-scan.txt")
   fi
