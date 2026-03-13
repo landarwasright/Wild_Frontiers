@@ -8,7 +8,7 @@ http://forums.wesnoth.org/viewtopic.php?t=28306&p=414894
 --]]
 
 -- Save and load the map using a WML variable
-local helper = wesnoth.require "lua/helper.lua"
+local helper = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 
 function wesnoth.wml_actions.save_map(cfg)
   local v = cfg.variable or helper.wml_error("save_map missing required variable= attribute.")
@@ -140,13 +140,7 @@ function wesnoth.wml_actions.road_path(cfg)
 		road_ops[road.terrain] = road
 	end
 
-	local path, cost
-
--- if wesnoth version >= 1.15.0
-if wesnoth.compare_versions(wesnoth.game_config.version, ">=", "1.15.0") then
-
-
-	path, cost = wesnoth.find_path(from_x, from_y, to_x, to_y, {
+	local path, cost = wesnoth.find_path(from_x, from_y, to_x, to_y, {
 		viewing_side = 1, ignore_units = true, ignore_teleport = true, ignore_visibility = true,
 		calculate = function(x, y, current_cost)
 			local tile = wesnoth.get_terrain(x, y)
@@ -156,26 +150,6 @@ if wesnoth.compare_versions(wesnoth.game_config.version, ">=", "1.15.0") then
 			end
 			return res
 		end })
-
-
--- else wesnoth version < 1.15.0
-else
-
-
-	path, cost = wesnoth.find_path(from_x, from_y, to_x, to_y,
-		function(x, y, current_cost)
-			local tile = wesnoth.get_terrain(x, y)
-			local res = road_costs[tile] or 1.0
-			if windiness > 1 then
-				res = res * wesnoth.random(windiness)
-			end
-			return res
-		end )
-
-
-
-end
--- end wesnoth version
 
 
 
@@ -273,7 +247,7 @@ function wesnoth.wml_actions.get_recruit_list( cfg )
 	local filter = wml.get_child( cfg, "filter" )
 	local variable = cfg.variable or "recruit_list"
 
-	for index, side in ipairs( wesnoth.get_sides( filter_side ) ) do
+	for index, side in ipairs(wesnoth.sides.find(filter_side)) do
 		local recruit_list = { }
 
 		for recruitable in string.gmatch( side.__cfg.recruit, '[^,]+' ) do
@@ -282,7 +256,7 @@ function wesnoth.wml_actions.get_recruit_list( cfg )
 
 		if filter then
 			--filter.side = side.side -- to avoid collecting extra_recruit from enemies
-			for index,unit in ipairs( wesnoth.get_units( filter ) ) do
+			for index,unit in ipairs(wesnoth.units.find_on_map(filter)) do
 				if unit.canrecruit and #unit.extra_recruit > 0 then
 					for extra_index, extra_recruitable in ipairs( unit.extra_recruit ) do
 						if not check( recruit_list, extra_recruitable ) then
@@ -320,9 +294,6 @@ function wesnoth.wml_actions.wf_sort_array ( cfg )
 end
 
 function wesnoth.wml_actions.wf_gold(cfg)
--- if wesnoth version >= 1.15.0
-if wesnoth.compare_versions(wesnoth.game_config.version, ">=", "1.15.0") then
-
         local amount = tonumber(cfg.amount) or
                 wml.error "[wf_gold] missing required amount= attribute."
         local sides = wesnoth.sides.find(cfg)
@@ -335,22 +306,4 @@ if wesnoth.compare_versions(wesnoth.game_config.version, ">=", "1.15.0") then
                         team.gold = team.gold + amount
                 end
         end
-
--- else wesnoth version < 1.15.0
-else
-
-        local amount = tonumber(cfg.amount) or
-                helper.wml_error "[wf_gold] missing required amount= attribute."
-        local sides = wesnoth.get_sides(cfg)
-        local reset = cfg.reset
-        if (reset == nil) then reset = false end
-        for index, team in ipairs(sides) do
-                if reset and team.gold < 0 then
-                        team.gold = amount
-                else
-                        team.gold = team.gold + amount
-                end
-        end
-end
--- end wesnoth version
 end

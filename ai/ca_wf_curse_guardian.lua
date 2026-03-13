@@ -1,6 +1,6 @@
 -- Based on the attack code of zone_guardian
 local AH = wesnoth.require "ai/lua/ai_helper.lua"
-local H = wesnoth.require "helper"
+local H = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 local M = wesnoth.map
 
 local function wf_get_guardian(cfg)
@@ -14,7 +14,7 @@ local function wf_get_guardian(cfg)
 end
 
 local function wf_get_targets(cfg)
-    local target = wesnoth.get_units {
+    local target = wesnoth.units.find_on_map {
         { "filter_side", { { "enemy_of", { side = wesnoth.current.side } } } },
         { "and", wml.get_child(cfg, "filter_second") }
     }

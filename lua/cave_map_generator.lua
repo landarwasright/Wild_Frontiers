@@ -1,7 +1,7 @@
 local MG = wesnoth.require "~add-ons/Wild_Frontiers/lua/mapgen_helper"
 local LS = wesnoth.require "location_set"
 local random = wesnoth.random
-local helper = wesnoth.require "lua/helper.lua"
+local helper = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 
 local callbacks = {}
 

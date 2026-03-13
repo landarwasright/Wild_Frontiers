@@ -1,5 +1,5 @@
 -- goto with check if unit_in_way and no AH.checked_stopunit_moves(ai, best_unit)
-local H = wesnoth.require "helper"
+local H = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 local AH = wesnoth.require "ai/lua/ai_helper.lua"
 local BC = wesnoth.require "ai/lua/battle_calcs.lua"
 local LS = wesnoth.require "location_set"
@@ -141,22 +141,11 @@ function ca_wf_goto:execution(cfg, data)
             else  -- Otherwise find the best path to take
                 local path, cost
                 if avoid_enemies then
--- if version >= 1.15.0
-if wesnoth.compare_versions(wesnoth.game_config.version, ">=", "1.15.0") then
                     path, cost = wesnoth.find_path(unit, loc[1], loc[2], {
                         calculate = function(x, y, current_cost)
                             return wf_custom_cost(x, y, unit, enemy_map, enemy_attack_map, avoid_enemies)
                         end
                     })
--- else version < 1.15.0
-else
-                    path, cost = wesnoth.find_path(unit, loc[1], loc[2],
-                        function(x, y, current_cost)
-                            return wf_custom_cost(x, y, unit, enemy_map, enemy_attack_map, avoid_enemies)
-                        end
-                    )
-end
--- end version
                 else
                     local enemy_at_goal
                     if cfg.ignore_enemy_at_goal then
