@@ -21,7 +21,7 @@ end
 
 local function get_last_unit_frozen(cfg)
 	local filter = wml.get_child(cfg, "filter") or { id = cfg.id }
-	local all_units = wesnoth.get_units {
+	local all_units = wesnoth.units.find_on_map {
 		side = wesnoth.current.side,
 		{ "and", filter }
 	}
@@ -111,7 +111,7 @@ function ca_wf_move_last:execution(cfg, data, filter_own)
 			resting = MAIUV.get_mai_unit_variables(last_unit, cfg.ai_id, "resting" ),
 			attacks_left = MAIUV.get_mai_unit_variables(last_unit, cfg.ai_id, "attacks_left" ),
 		}
-		wesnoth.invoke_synced_command('reset_moves', cfg_reset_moves)
+		wesnoth.sync.invoke_command('reset_moves', cfg_reset_moves)
 		MAIUV.delete_mai_unit_variables(last_unit, cfg.ai_id)
 		MAIUV.set_mai_unit_variables(last_unit, cfg.ai_id, { last_x = last_unit.x, last_y = last_unit.y })
 		last_unit = nil
