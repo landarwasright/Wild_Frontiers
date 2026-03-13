@@ -10,14 +10,36 @@ http://forums.wesnoth.org/viewtopic.php?t=28306&p=414894
 -- Save and load the map using a WML variable
 local helper = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 
+local function get_map_size()
+  local map = wesnoth.current.map
+  return map.playable_width, map.playable_height, map.border_size
+end
+
+local function get_terrain(x, y)
+  return wesnoth.current.map[{x, y}]
+end
+
+local function set_terrain(x, y, terrain, mode, replace_if_failed)
+  if replace_if_failed then
+    mode = mode or "both"
+    terrain = wesnoth.map.replace_if_failed(terrain, mode)
+  elseif mode == "both" or mode == "base" or mode == "overlay" then
+    terrain = wesnoth.map["replace_" .. mode](terrain)
+  elseif mode ~= nil then
+    error("set_terrain: invalid mode")
+  end
+
+  wesnoth.current.map[{x, y}] = terrain
+end
+
 function wesnoth.wml_actions.save_map(cfg)
   local v = cfg.variable or helper.wml_error("save_map missing required variable= attribute.")
   local b = cfg.border_size or 1
-  local w, h = wesnoth.get_map_size()
+  local w, h = get_map_size()
   local t = {}
   for y = 1 - b, h + b do
     local r = {}
-    for x = 1 - b, w + b do r[x + b] = wesnoth.get_terrain(x, y) end
+    for x = 1 - b, w + b do r[x + b] = get_terrain(x, y) end
     t[y + b] = table.concat(r, ',')
   end
   local s = table.concat(t, '\n')
@@ -25,13 +47,13 @@ function wesnoth.wml_actions.save_map(cfg)
   s = string.gsub(s, "%s*%d+%s*", "")
   -- Set side 1 keep location
   s = string.gsub(s, "K(%a+)^Yk", "1 K%1^Yk")
-  wesnoth.set_variable(v, string.format("border_size=%d\nusage=map\n\n%s", b, s))
+  wml.variables[v] = string.format("border_size=%d\nusage=map\n\n%s", b, s)
 end
 
 
 function wesnoth.wml_actions.load_map(cfg)
   local v = cfg.variable or helper.wml_error("load_map missing required variable= attribute.")
-  wesnoth.fire("replace_map", { map = wesnoth.get_variable(v), expand = true, shrink = true })
+  wesnoth.fire("replace_map", { map = wml.variables[v], expand = true, shrink = true })
 end
 
 
@@ -42,7 +64,7 @@ function wesnoth.wml_actions.store_shroud(args)
    local storage = args.variable or helper.wml_error("~wml:[store_shroud] expects a variable= attribute.")
    local team = wesnoth.sides[team_num]
    local current_shroud = team.__cfg.shroud_data
-   wesnoth.set_variable(storage,current_shroud)
+   wml.variables[storage] = current_shroud
 end
 
 
@@ -52,7 +74,7 @@ function wesnoth.wml_actions.set_shroud(args)
    if string.sub(shroud,1,1) ~= "|" then
       helper.wml_error("[set_shroud] was passed an invalid shroud string.")
    else
-      local w,h,b = wesnoth.get_map_size()
+      local _, _, b = get_map_size()
       local shroud_x = 1 - b
       for r in string.gmatch(shroud, "|(%d*)") do
          local shroud_y = 1 - b
@@ -69,7 +91,7 @@ end
 
 function wesnoth.wml_actions.deselect()
   wesnoth.delay(600)
-  wesnoth.select_unit(nil, true)
+  wesnoth.units.select(nil, true)
   wesnoth.deselect_hex()
   wesnoth.fire("redraw")
 --  wesnoth.wml_actions.redraw {}
@@ -81,7 +103,7 @@ local function on_board(x, y)
         if type(x) ~= "number" or type(y) ~= "number" then
                 return false
         end
-        local w, h = wesnoth.get_map_size()
+        local w, h = get_map_size()
         return x >= 1 and y >= 1 and x <= w and y <= h
 end
 
@@ -97,26 +119,26 @@ local function place_road(to_x, to_y, from_x, from_y, road_ops)
 		return
 	end
 
-	local tile_op = road_ops[wesnoth.get_terrain(to_x, to_y)]
+	local tile_op = road_ops[get_terrain(to_x, to_y)]
 	if tile_op then
 		if tile_op.convert_to_bridge and from_x and from_y then
 			local bridges = {}
 			for elem in tile_op.convert_to_bridge:gmatch("[^%s,][^,]*") do
 				table.insert(bridges, elem)
 			end
-			local dir = wesnoth.map.get_relative_dir(from_x, from_y, to_x, to_y)
-			if dir == 'n' or dir == 's' then
-				wesnoth.set_terrain(to_x, to_y, bridges[1], 'both', false)
-			elseif dir == 'sw' or dir == 'ne' then
-				wesnoth.set_terrain(to_x, to_y, bridges[2], 'both', false)
-			elseif dir == 'se' or dir == 'nw' then
-				wesnoth.set_terrain(to_x, to_y, bridges[3], 'both', false)
+				local dir = wesnoth.map.get_relative_dir(from_x, from_y, to_x, to_y)
+				if dir == 'n' or dir == 's' then
+					set_terrain(to_x, to_y, bridges[1], 'both', false)
+				elseif dir == 'sw' or dir == 'ne' then
+					set_terrain(to_x, to_y, bridges[2], 'both', false)
+				elseif dir == 'se' or dir == 'nw' then
+					set_terrain(to_x, to_y, bridges[3], 'both', false)
+				end
+			elseif tile_op.convert_to then
+				local tile = helper.rand(tile_op.convert_to)
+				set_terrain(to_x, to_y, tile, 'both', false)
 			end
-		elseif tile_op.convert_to then
-			local tile = helper.rand(tile_op.convert_to)
-			wesnoth.set_terrain(to_x, to_y, tile, 'both', false)
 		end
-	end
 end
 
 function wesnoth.wml_actions.road_path(cfg)
@@ -140,13 +162,13 @@ function wesnoth.wml_actions.road_path(cfg)
 		road_ops[road.terrain] = road
 	end
 
-	local path, cost = wesnoth.find_path(from_x, from_y, to_x, to_y, {
+	local path, cost = wesnoth.paths.find_path(from_x, from_y, to_x, to_y, {
 		viewing_side = 1, ignore_units = true, ignore_teleport = true, ignore_visibility = true,
 		calculate = function(x, y, current_cost)
-			local tile = wesnoth.get_terrain(x, y)
+			local tile = get_terrain(x, y)
 			local res = road_costs[tile] or 1.0
 			if windiness > 1 then
-				res = res * wesnoth.random(windiness)
+				res = res * mathx.random(windiness)
 			end
 			return res
 		end })
@@ -189,10 +211,10 @@ function wesnoth.wml_actions.store_nearest_locations(cfg)
 
 	local locs = LS.create()
 	for i = 1, 65536 do
-		locs = wesnoth.get_locations({
-				{ "and", { x = src_x, y = src_y, radius = distance } },
-				{ "and", filter_location }
-			})
+		locs = wesnoth.map.find({
+			{ "and", { x = src_x, y = src_y, radius = distance } },
+			{ "and", filter_location }
+		})
 
 		if #locs > 0 then
 			distance_set = true
@@ -211,10 +233,10 @@ function wesnoth.wml_actions.store_nearest_locations(cfg)
 
 	for i, loc in ipairs(locs) do
 		local x, y = loc[1], loc[2]
-		local t = wesnoth.get_terrain(x, y)
+		local t = get_terrain(x, y)
 		local res = { x = x, y = y, terrain = t }
-		if wesnoth.get_terrain_info(t).village then
-			res.owner_side = wesnoth.get_village_owner(x, y) or 0
+		if wesnoth.terrain_types[t].village then
+			res.owner_side = wesnoth.map.get_owner(x, y) or 0
 		end
 		utils.vwriter.write(writer, res)
 	end
@@ -222,7 +244,7 @@ end
 
 function wesnoth.effects.canrecruit(u, cfg)
 	u.canrecruit = true
-	wesnoth.add_modification(u, "object", { wml.tag.effect {
+	wesnoth.units.add_modification(u, "object", { wml.tag.effect {
 		apply_to = "overlay",
 		add = "misc/leader-expendable.png",
 	}}, false)
@@ -267,12 +289,12 @@ function wesnoth.wml_actions.get_recruit_list( cfg )
 			end
 		end
 
-		wesnoth.set_variable( string.format( "%s[%d]", variable, index - 1 ), { side = side.side,
+			wml.variables[string.format( "%s[%d]", variable, index - 1 )] = { side = side.side,
 											--team_name = side.team_name,
 											--user_team_name = side.user_team_name,
 											--name = side.side_name,
-											recruit_list = table.concat( recruit_list, "," ) } )
-	end
+											recruit_list = table.concat( recruit_list, "," ) }
+		end
 end
 
 -- lifted from add-ons/Custom_Campaign/lua/wml-tags.lua

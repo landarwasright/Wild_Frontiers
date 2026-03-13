@@ -24,15 +24,16 @@ function ca_wf_loiter_guardian:execution(cfg)
 
 	if (guardian.moves > 0) and (not cfg.stationary) then
             local zone = wml.get_child(cfg, "filter_location")
-            local width, height = wesnoth.get_map_size()
-            local locs_map = LS.of_pairs(wesnoth.get_locations {
+            local map = wesnoth.current.map
+            local width, height = map.playable_width, map.playable_height
+            local locs_map = LS.of_pairs(wesnoth.map.find {
                 x = '1-' .. width,
                 y = '1-' .. height,
                 { "and", zone }
             })
 
             -- Check out which of those hexes the guardian can reach
-            local reach_map = LS.of_pairs(wesnoth.find_reach(guardian))
+            local reach_map = LS.of_pairs(wesnoth.paths.find_reach(guardian))
             reach_map:inter(locs_map)
 
             -- If it can reach some hexes, use only reachable locations,
