@@ -28,6 +28,8 @@ WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
 WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
 WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
 WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
+WF_FORCE_SUMMER_OUTLAW_RAID=${WF_FORCE_SUMMER_OUTLAW_RAID:-0}
+WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_TRACE=${WF_TRACE:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
@@ -149,7 +151,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" '
     /^\[\/scenario\]$/ && !inserted {
       print ""
       print "[event]"
@@ -166,6 +168,17 @@ inject_debug_overlay() {
       print "        >>"
       print "    [/lua]"
       print "[/event]"
+      if (scenario_id == "Summer_of_Dreams") {
+        print ""
+        print "[event]"
+        print "    name=start"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_state scenario=" scenario_id " drought=\" .. tostring(wml.variables[\"wf_vars.drought\"] or \"\") .. \" calamity_type=\" .. tostring(wml.variables[\"relations.calamity_type\"] or \"\"))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+      }
       if (scenario_id == "A_New_Beginning" && force_keep == "1") {
         print ""
         print "[event]"
@@ -192,6 +205,35 @@ inject_debug_overlay() {
         print "    [clear_variable]"
         print "        name=wf_automation.hero"
         print "    [/clear_variable]"
+        print "[/event]"
+      }
+      if (scenario_id == "Summer_of_Dreams" && force_summer_outlaw_raid == "1") {
+        print ""
+        print "[event]"
+        print "    name=start"
+        print "    [set_variable]"
+        print "        name=relations.outlaws"
+        print "        value=100"
+        print "    [/set_variable]"
+        print "    [set_variable]"
+        print "        name=quota.outlaws"
+        print "        value=1"
+        print "    [/set_variable]"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_force_outlaw_raid scenario=" scenario_id " relations_outlaws=\" .. tostring(wml.variables[\"relations.outlaws\"] or \"\") .. \" quota_outlaws=\" .. tostring(wml.variables[\"quota.outlaws\"] or \"\"))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_outlaws_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_outlaw_raid scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
         print "[/event]"
       }
       print ""
@@ -483,6 +525,10 @@ main() {
     note_progress "next_scenario_overlay_ready status=$run_status"
     wait_for_log_text "$log_path" "WF_AUTOMATION side1_turn_refresh scenario=$WF_NEXT_SCENARIO turn=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
     note_progress "next_scenario_turn1 status=$run_status"
+    if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
+      wait_for_log_text "$log_path" "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_outlaw_raid status=$run_status"
+    fi
     if (( WF_NEXT_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_NEXT_END_TURNS" "$WF_NEXT_SCENARIO" "${WF_NEXT_SCENARIO}-turn" || run_status=$?
       note_progress "next_scenario_complete status=$run_status"
@@ -503,8 +549,16 @@ main() {
     reached_turn=$(extract_turn_number "$ARTIFACT_DIR/turn-scan.txt")
   fi
   local next_reached_turn=""
+  local summer_outlaw_raid_seen=""
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
+    if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
+        summer_outlaw_raid_seen=yes
+      else
+        summer_outlaw_raid_seen=no
+      fi
+    fi
   fi
 
   {
@@ -516,6 +570,7 @@ main() {
     echo "reached_turn=$reached_turn"
     echo "next_turns=$WF_NEXT_END_TURNS"
     echo "next_reached_turn=$next_reached_turn"
+    echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
   note_progress "summary_written status=$run_status"
