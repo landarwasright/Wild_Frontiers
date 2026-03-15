@@ -50,6 +50,9 @@ WF_FORCE_WINTER_UNDEAD_RAID=${WF_FORCE_WINTER_UNDEAD_RAID:-0}
 WF_FORCE_WINTER_ELF_RAID=${WF_FORCE_WINTER_ELF_RAID:-0}
 WF_FORCE_WINTER_DWARF_RAID=${WF_FORCE_WINTER_DWARF_RAID:-0}
 WF_FORCE_WINTER_RUIN_CASTLE=${WF_FORCE_WINTER_RUIN_CASTLE:-0}
+WF_FORCE_SPRING_ORC_RAID=${WF_FORCE_SPRING_ORC_RAID:-0}
+WF_FORCE_SPRING_UNDEAD_RAID=${WF_FORCE_SPRING_UNDEAD_RAID:-0}
+WF_FORCE_SPRING_DROWNING=${WF_FORCE_SPRING_DROWNING:-0}
 WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
@@ -68,6 +71,10 @@ WF_WAIT_FOR_WINTER_UNDEAD_RAID=${WF_WAIT_FOR_WINTER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_WINTER_ELF_RAID=${WF_WAIT_FOR_WINTER_ELF_RAID:-0}
 WF_WAIT_FOR_WINTER_DWARF_RAID=${WF_WAIT_FOR_WINTER_DWARF_RAID:-0}
 WF_WAIT_FOR_WINTER_RUIN_CASTLE=${WF_WAIT_FOR_WINTER_RUIN_CASTLE:-0}
+WF_WAIT_FOR_SPRING_STATE=${WF_WAIT_FOR_SPRING_STATE:-0}
+WF_WAIT_FOR_SPRING_ORC_RAID=${WF_WAIT_FOR_SPRING_ORC_RAID:-0}
+WF_WAIT_FOR_SPRING_UNDEAD_RAID=${WF_WAIT_FOR_SPRING_UNDEAD_RAID:-0}
+WF_WAIT_FOR_SPRING_DROWNING=${WF_WAIT_FOR_SPRING_DROWNING:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
@@ -194,7 +201,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_winter_end="$WF_FORCE_WINTER_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_winter_undead_raid="$WF_FORCE_WINTER_UNDEAD_RAID" -v force_winter_elf_raid="$WF_FORCE_WINTER_ELF_RAID" -v force_winter_dwarf_raid="$WF_FORCE_WINTER_DWARF_RAID" -v force_winter_ruin_castle="$WF_FORCE_WINTER_RUIN_CASTLE" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_winter_end="$WF_FORCE_WINTER_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_winter_undead_raid="$WF_FORCE_WINTER_UNDEAD_RAID" -v force_winter_elf_raid="$WF_FORCE_WINTER_ELF_RAID" -v force_winter_dwarf_raid="$WF_FORCE_WINTER_DWARF_RAID" -v force_winter_ruin_castle="$WF_FORCE_WINTER_RUIN_CASTLE" -v force_spring_orc_raid="$WF_FORCE_SPRING_ORC_RAID" -v force_spring_undead_raid="$WF_FORCE_SPRING_UNDEAD_RAID" -v force_spring_drowning="$WF_FORCE_SPRING_DROWNING" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -672,6 +679,59 @@ inject_debug_overlay() {
         print "            [/lua]"
         print "        [/then]"
         print "    [/if]"
+        print "[/event]"
+      }
+      if (scenario_id == "Spring_of_Raindrops") {
+        print ""
+        print "[event]"
+        print "    name=start"
+        print "    [lua]"
+        print "        code=<<"
+        print "            local side1 = wesnoth.sides[1]"
+        print "            local village_gold = side1 and tostring(side1.village_gold or \"\") or \"\""
+        print "            local village_support = side1 and tostring(side1.village_support or \"\") or \"\""
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_state scenario=" scenario_id " economy=\" .. tostring(wml.variables[\"wf_vars.economy\"] or \"\") .. \" village_gold=\" .. village_gold .. \" village_support=\" .. village_support)"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_orc_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            local leaders = wesnoth.units.find_on_map { side = 5, canrecruit = true }"
+        print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
+        print "            local side5_units = wesnoth.units.find_on_map { side = 5 }"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_orc_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side5_units=\" .. tostring(#side5_units))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_undead_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            local leaders = wesnoth.units.find_on_map { side = 7, canrecruit = true }"
+        print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
+        print "            local side7_units = wesnoth.units.find_on_map { side = 7 }"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_undead_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side7_units=\" .. tostring(#side7_units))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=die"
+        print "    first_time_only=no"
+        print "    [filter]"
+        print "        id=wf_automation_spring_drown"
+        print "    [/filter]"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
         print "[/event]"
       }
       if (scenario_id == "A_New_Beginning" && force_keep == "1") {
@@ -1369,6 +1429,125 @@ inject_debug_overlay() {
           print "    [/if]"
         }
       }
+      if (scenario_id == "Spring_of_Raindrops") {
+        if (force_spring_orc_raid == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [fire_event]"
+          print "                name=new_orc_raid"
+          print "            [/fire_event]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+        if (force_spring_undead_raid == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [fire_event]"
+          print "                name=new_undead_raid"
+          print "            [/fire_event]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+        if (force_spring_drowning == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [kill]"
+          print "                id=wf_automation_spring_drown"
+          print "                animate=no"
+          print "                fire_event=no"
+          print "            [/kill]"
+          print "            [store_locations]"
+          print "                variable=wf_automation.spring_drown_hex"
+          print "                terrain=Wo*"
+          print "                [filter_adjacent_location]"
+          print "                    terrain=Wo*"
+          print "                    count=6"
+          print "                [/filter_adjacent_location]"
+          print "            [/store_locations]"
+          print "            [if]"
+          print "                [have_location]"
+          print "                    x=$wf_automation.spring_drown_hex[0].x"
+          print "                    y=$wf_automation.spring_drown_hex[0].y"
+          print "                    terrain=Wo*"
+          print "                [/have_location]"
+          print "                [then]"
+          print "                    [unit]"
+          print "                        id=wf_automation_spring_drown"
+          print "                        side=1"
+          print "                        type=Peasant"
+          print "                        x,y=$wf_automation.spring_drown_hex[0].x,$wf_automation.spring_drown_hex[0].y"
+          print "                        hitpoints=1"
+          print "                        moves=0"
+          print "                        upkeep=loyal"
+          print "                        [modifications]"
+          print "                            [object]"
+          print "                                [effect]"
+          print "                                    apply_to=movement_costs"
+          print "                                    replace=yes"
+          print "                                    [movement_costs]"
+          print "                                        deep_water=99"
+          print "                                    [/movement_costs]"
+          print "                                [/effect]"
+          print "                            [/object]"
+          print "                        [/modifications]"
+          print "                    [/unit]"
+          print "                    [store_unit]"
+          print "                        [filter]"
+          print "                            id=wf_automation_spring_drown"
+          print "                        [/filter]"
+          print "                        variable=wf_automation.spring_drown_unit"
+          print "                    [/store_unit]"
+          print "                    [lua]"
+          print "                        code=<<"
+          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning_seed scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.spring_drown_unit.x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.spring_drown_unit.y\"] or \"\"))"
+          print "                        >>"
+          print "                    [/lua]"
+          print "                    [harm_unit]"
+          print "                        [filter]"
+          print "                            id=wf_automation_spring_drown"
+          print "                        [/filter]"
+          print "                        amount=4"
+          print "                        kill=yes"
+          print "                        animate=no"
+          print "                    [/harm_unit]"
+          print "                    [if]"
+          print "                        [not]"
+          print "                            [have_unit]"
+          print "                                id=wf_automation_spring_drown"
+          print "                            [/have_unit]"
+          print "                        [/not]"
+          print "                        [then]"
+          print "                            [lua]"
+          print "                                code=<<"
+          print "                                    wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning scenario=" scenario_id "\")"
+          print "                                >>"
+          print "                            [/lua]"
+          print "                        [/then]"
+          print "                    [/if]"
+          print "                    [clear_variable]"
+          print "                        name=wf_automation.spring_drown_unit"
+          print "                    [/clear_variable]"
+          print "                [/then]"
+          print "            [/if]"
+          print "            [clear_variable]"
+          print "                name=wf_automation.spring_drown_hex"
+          print "            [/clear_variable]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+      }
       if (scenario_id == "A_New_Beginning" && force_season_end == "1") {
         print "    [lua]"
         print "        code=<<"
@@ -1844,6 +2023,22 @@ main() {
     if [[ -n "$WF_CHAIN_SCENARIO_4" ]]; then
       wait_for_scenario_entry "$log_path" "$WF_CHAIN_SCENARIO_3" "$WF_CHAIN_SCENARIO_4" "chain_scenario_4" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
     fi
+    if [[ "$WF_WAIT_FOR_SPRING_STATE" == "1" ]]; then
+      wait_for_log_text "$log_path" "WF_AUTOMATION spring_state scenario=$WF_CHAIN_SCENARIO_4" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "spring_state status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SPRING_ORC_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_orc_raid scenario=$WF_CHAIN_SCENARIO_4" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "spring_orc_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SPRING_UNDEAD_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_undead_raid scenario=$WF_CHAIN_SCENARIO_4" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "spring_undead_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SPRING_DROWNING" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_drowning scenario=$WF_CHAIN_SCENARIO_4" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "spring_drowning status=$run_status"
+    fi
   fi
 
   local after_log
@@ -1883,6 +2078,10 @@ main() {
   local winter_elf_raid_seen=""
   local winter_dwarf_raid_seen=""
   local winter_ruin_castle_seen=""
+  local spring_state_seen=""
+  local spring_orc_raid_seen=""
+  local spring_undead_raid_seen=""
+  local spring_drowning_seen=""
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
@@ -2031,6 +2230,34 @@ main() {
         winter_ruin_castle_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SPRING_STATE" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_state scenario=$WF_CHAIN_SCENARIO_4" "$log_path"; then
+        spring_state_seen=yes
+      else
+        spring_state_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SPRING_ORC_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_orc_raid scenario=$WF_CHAIN_SCENARIO_4" "$log_path"; then
+        spring_orc_raid_seen=yes
+      else
+        spring_orc_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SPRING_UNDEAD_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_undead_raid scenario=$WF_CHAIN_SCENARIO_4" "$log_path"; then
+        spring_undead_raid_seen=yes
+      else
+        spring_undead_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SPRING_DROWNING" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_drowning scenario=$WF_CHAIN_SCENARIO_4" "$log_path"; then
+        spring_drowning_seen=yes
+      else
+        spring_drowning_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
         summer_calamity_kill_seen=yes
@@ -2081,6 +2308,10 @@ main() {
     echo "winter_elf_raid_seen=$winter_elf_raid_seen"
     echo "winter_dwarf_raid_seen=$winter_dwarf_raid_seen"
     echo "winter_ruin_castle_seen=$winter_ruin_castle_seen"
+    echo "spring_state_seen=$spring_state_seen"
+    echo "spring_orc_raid_seen=$spring_orc_raid_seen"
+    echo "spring_undead_raid_seen=$spring_undead_raid_seen"
+    echo "spring_drowning_seen=$spring_drowning_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
     echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
