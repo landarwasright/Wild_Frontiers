@@ -299,6 +299,18 @@ inject_debug_overlay() {
             print "    [/lua]"
             print "[/event]"
           }
+          if (force_summer_calamity_type == "elves") {
+            print ""
+            print "[event]"
+            print "    name=calamity_elves_sighted"
+            print "    first_time_only=no"
+            print "    [lua]"
+            print "        code=<<"
+            print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_sighting scenario=" scenario_id " type=elves event=calamity_elves_sighted\")"
+            print "        >>"
+            print "    [/lua]"
+            print "[/event]"
+          }
           if (force_summer_loyalist_ditch_keep == "1" && force_summer_calamity_type == "loyalists") {
             print ""
             print "[event]"
@@ -573,7 +585,7 @@ inject_debug_overlay() {
         print "            end"
         print "        >>"
         print "    [/lua]"
-        if (force_summer_calamity_sighting == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves" || force_summer_calamity_type == "loyalists")) {
+        if (force_summer_calamity_sighting == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves" || force_summer_calamity_type == "loyalists" || force_summer_calamity_type == "elves")) {
           print "    [if]"
           print "        [and]"
           print "            [variable]"
@@ -615,6 +627,9 @@ inject_debug_overlay() {
           }
           if (force_summer_calamity_type == "loyalists") {
             print "                name=calamity_loyalists_sighted"
+          }
+          if (force_summer_calamity_type == "elves") {
+            print "                name=calamity_elves_sighted"
           }
           print "                [primary_unit]"
           print "                    x,y=$wf_automation.calamity_spot[0].x,$wf_automation.calamity_spot[0].y"
