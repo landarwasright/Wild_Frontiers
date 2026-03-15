@@ -32,10 +32,12 @@ WF_FORCE_SUMMER_OUTLAW_RAID=${WF_FORCE_SUMMER_OUTLAW_RAID:-0}
 WF_FORCE_SUMMER_BANDIT_RAID=${WF_FORCE_SUMMER_BANDIT_RAID:-0}
 WF_FORCE_SUMMER_ORC_RAID=${WF_FORCE_SUMMER_ORC_RAID:-0}
 WF_FORCE_SUMMER_UNDEAD_RAID=${WF_FORCE_SUMMER_UNDEAD_RAID:-0}
+WF_FORCE_SUMMER_CALAMITY_TYPE=${WF_FORCE_SUMMER_CALAMITY_TYPE:-}
 WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
 WF_WAIT_FOR_SUMMER_UNDEAD_RAID=${WF_WAIT_FOR_SUMMER_UNDEAD_RAID:-0}
+WF_WAIT_FOR_SUMMER_CALAMITY=${WF_WAIT_FOR_SUMMER_CALAMITY:-0}
 WF_TRACE=${WF_TRACE:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
@@ -157,7 +159,27 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" '
+    scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
+      print ""
+      print "[event]"
+      print "    name=prestart"
+      print "    [set_variable]"
+      print "        name=wf_automation.calamity_type"
+      print "        value=" force_summer_calamity_type
+      print "    [/set_variable]"
+      print "    [set_variable]"
+      print "        name=relations.calamity_type"
+      print "        value=" force_summer_calamity_type
+      print "    [/set_variable]"
+      print "    [lua]"
+      print "        code=<<"
+      print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_force_calamity scenario=" scenario_id " type=" force_summer_calamity_type "\")"
+      print "        >>"
+      print "    [/lua]"
+      print "[/event]"
+      inserted_calamity_prestart=1
+    }
     /^\[\/scenario\]$/ && !inserted {
       print ""
       print "[event]"
@@ -184,6 +206,26 @@ inject_debug_overlay() {
         print "        >>"
         print "    [/lua]"
         print "[/event]"
+        if (force_summer_calamity_type != "") {
+          print ""
+          print "[event]"
+          print "    name=start"
+          print "    [fire_event]"
+          print "        name=side 8 turn 9 end"
+          print "    [/fire_event]"
+          print "[/event]"
+          print ""
+          print "[event]"
+          print "    name=side 8 turn 9 end"
+          print "    [lua]"
+          print "        code=<<"
+          print "            local calamity_type = tostring(wml.variables[\"wf_automation.calamity_type\"] or \"\")"
+          print "            local units = wesnoth.units.find_on_map { side = 8 }"
+          print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_trigger scenario=" scenario_id " type=\" .. calamity_type .. \" side8_units=\" .. tostring(#units))"
+          print "        >>"
+          print "    [/lua]"
+          print "[/event]"
+        }
       }
       if (scenario_id == "A_New_Beginning" && force_keep == "1") {
         print ""
@@ -380,6 +422,17 @@ inject_debug_overlay() {
       print "            wesnoth.log(\"warning\", \"WF_AUTOMATION side1_turn_refresh scenario=" scenario_id " turn=\" .. tostring(wml.variables[\"turn_number\"]))"
       print "        >>"
       print "    [/lua]"
+      if (scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "") {
+        print "    [lua]"
+        print "        code=<<"
+        print "            if tostring(wml.variables[\"turn_number\"]) == \"1\" then"
+        print "                local calamity_type = tostring(wml.variables[\"wf_automation.calamity_type\"] or \"\")"
+        print "                local units = wesnoth.units.find_on_map { side = 8 }"
+        print "                wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_state scenario=" scenario_id " type=\" .. calamity_type .. \" side8_units=\" .. tostring(#units))"
+        print "            end"
+        print "        >>"
+        print "    [/lua]"
+      }
       if (scenario_id == "A_New_Beginning" && force_season_end == "1") {
         print "    [lua]"
         print "        code=<<"
@@ -537,6 +590,15 @@ extract_turn_number() {
   ' "$text_path"
 }
 
+extract_summer_calamity_units() {
+  local log_path=$1
+  local scenario_id=$2
+
+  rg -o "WF_AUTOMATION summer_calamity_state scenario=${scenario_id} type=[^ ]+ side8_units=[0-9]+" "$log_path" 2>/dev/null \
+    | sed 's/.*side8_units=//' \
+    | tail -n 1
+}
+
 capture_turn_number() {
   local name=$1
   capture_and_ocr "$name"
@@ -676,6 +738,10 @@ main() {
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_undead_raid scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_undead_raid status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY" == "1" ]]; then
+      wait_for_log_text "$log_path" "WF_AUTOMATION summer_calamity_state scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_calamity status=$run_status"
+    fi
     if (( WF_NEXT_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_NEXT_END_TURNS" "$WF_NEXT_SCENARIO" "${WF_NEXT_SCENARIO}-turn" || run_status=$?
       note_progress "next_scenario_complete status=$run_status"
@@ -700,6 +766,8 @@ main() {
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
   local summer_undead_raid_seen=""
+  local summer_calamity_seen=""
+  local summer_calamity_side8_units=""
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
@@ -730,6 +798,14 @@ main() {
         summer_undead_raid_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_calamity_state scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
+        summer_calamity_seen=yes
+      else
+        summer_calamity_seen=no
+      fi
+      summer_calamity_side8_units=$(extract_summer_calamity_units "$log_path" "$WF_NEXT_SCENARIO")
+    fi
   fi
 
   {
@@ -745,6 +821,9 @@ main() {
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
     echo "summer_undead_raid_seen=$summer_undead_raid_seen"
+    echo "summer_calamity_type=$WF_FORCE_SUMMER_CALAMITY_TYPE"
+    echo "summer_calamity_seen=$summer_calamity_seen"
+    echo "summer_calamity_side8_units=$summer_calamity_side8_units"
     echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
   note_progress "summary_written status=$run_status"
