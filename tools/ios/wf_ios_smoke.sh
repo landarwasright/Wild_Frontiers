@@ -31,9 +31,11 @@ WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
 WF_FORCE_SUMMER_OUTLAW_RAID=${WF_FORCE_SUMMER_OUTLAW_RAID:-0}
 WF_FORCE_SUMMER_BANDIT_RAID=${WF_FORCE_SUMMER_BANDIT_RAID:-0}
 WF_FORCE_SUMMER_ORC_RAID=${WF_FORCE_SUMMER_ORC_RAID:-0}
+WF_FORCE_SUMMER_UNDEAD_RAID=${WF_FORCE_SUMMER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
+WF_WAIT_FOR_SUMMER_UNDEAD_RAID=${WF_WAIT_FOR_SUMMER_UNDEAD_RAID:-0}
 WF_TRACE=${WF_TRACE:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
@@ -155,7 +157,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" '
     /^\[\/scenario\]$/ && !inserted {
       print ""
       print "[event]"
@@ -310,6 +312,61 @@ inject_debug_overlay() {
         print "    [lua]"
         print "        code=<<"
         print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_orc_raid scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+      }
+      if (scenario_id == "Summer_of_Dreams" && force_summer_undead_raid == "1") {
+        print ""
+        print "[event]"
+        print "    name=start"
+        print "    [set_variable]"
+        print "        name=relations.undead_raids"
+        print "        value=100"
+        print "    [/set_variable]"
+        print "    [set_variable]"
+        print "        name=quota.undead_raids"
+        print "        value=1"
+        print "    [/set_variable]"
+        print "    [set_variable]"
+        print "        name=quota.undead_enemy_choice"
+        print "        value=undead"
+        print "    [/set_variable]"
+        print "    [set_variable]"
+        print "        name=relations.orc_raids"
+        print "        value=0"
+        print "    [/set_variable]"
+        print "    [set_variable]"
+        print "        name=quota.orc_raids"
+        print "        value=0"
+        print "    [/set_variable]"
+        print "    [set_variable]"
+        print "        name=quota.orc_enemy_choice"
+        print "        value=skip"
+        print "    [/set_variable]"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_force_undead_raid scenario=" scenario_id " relations_undead_raids=\" .. tostring(wml.variables[\"relations.undead_raids\"] or \"\") .. \" quota_undead_raids=\" .. tostring(wml.variables[\"quota.undead_raids\"] or \"\") .. \" quota_undead_enemy_choice=\" .. tostring(wml.variables[\"quota.undead_enemy_choice\"] or \"\"))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=side 7 turn end"
+        print "    first_time_only=yes"
+        print "    [fire_event]"
+        print "        name=new_undead_raid"
+        print "    [/fire_event]"
+        print "    [unhide_unit]"
+        print "    [/unhide_unit]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_undead_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_undead_raid scenario=" scenario_id "\")"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -615,6 +672,10 @@ main() {
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_orc_raid scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_orc_raid status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_UNDEAD_RAID" == "1" ]]; then
+      wait_for_log_text "$log_path" "WF_AUTOMATION summer_undead_raid scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_undead_raid status=$run_status"
+    fi
     if (( WF_NEXT_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_NEXT_END_TURNS" "$WF_NEXT_SCENARIO" "${WF_NEXT_SCENARIO}-turn" || run_status=$?
       note_progress "next_scenario_complete status=$run_status"
@@ -638,6 +699,7 @@ main() {
   local summer_outlaw_raid_seen=""
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
+  local summer_undead_raid_seen=""
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
@@ -661,6 +723,13 @@ main() {
         summer_orc_raid_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_UNDEAD_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_undead_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
+        summer_undead_raid_seen=yes
+      else
+        summer_undead_raid_seen=no
+      fi
+    fi
   fi
 
   {
@@ -675,6 +744,7 @@ main() {
     echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
+    echo "summer_undead_raid_seen=$summer_undead_raid_seen"
     echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
   note_progress "summary_written status=$run_status"
