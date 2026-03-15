@@ -26,6 +26,7 @@ WF_START_SCENARIO=${WF_START_SCENARIO:-A_New_Beginning}
 WF_NEXT_SCENARIO=${WF_NEXT_SCENARIO:-Summer_of_Dreams}
 WF_CHAIN_SCENARIO_2=${WF_CHAIN_SCENARIO_2:-}
 WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
+WF_CHAIN_SCENARIO_4=${WF_CHAIN_SCENARIO_4:-}
 WF_NEXT_END_TURNS=${WF_NEXT_END_TURNS:-0}
 WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
 WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
@@ -33,6 +34,7 @@ WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
 WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
 WF_FORCE_SUMMER_END=${WF_FORCE_SUMMER_END:-0}
 WF_FORCE_AUTUMN_END=${WF_FORCE_AUTUMN_END:-0}
+WF_FORCE_WINTER_END=${WF_FORCE_WINTER_END:-0}
 WF_FORCE_SUMMER_OUTLAW_RAID=${WF_FORCE_SUMMER_OUTLAW_RAID:-0}
 WF_FORCE_SUMMER_BANDIT_RAID=${WF_FORCE_SUMMER_BANDIT_RAID:-0}
 WF_FORCE_SUMMER_ORC_RAID=${WF_FORCE_SUMMER_ORC_RAID:-0}
@@ -44,6 +46,10 @@ WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP=${WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_FORCE_SUMMER_SAURIAN_KEEP=${WF_FORCE_SUMMER_SAURIAN_KEEP:-0}
 WF_FORCE_AUTUMN_ELF_KEEP=${WF_FORCE_AUTUMN_ELF_KEEP:-0}
 WF_FORCE_AUTUMN_DWARF_KEEP=${WF_FORCE_AUTUMN_DWARF_KEEP:-0}
+WF_FORCE_WINTER_UNDEAD_RAID=${WF_FORCE_WINTER_UNDEAD_RAID:-0}
+WF_FORCE_WINTER_ELF_RAID=${WF_FORCE_WINTER_ELF_RAID:-0}
+WF_FORCE_WINTER_DWARF_RAID=${WF_FORCE_WINTER_DWARF_RAID:-0}
+WF_FORCE_WINTER_RUIN_CASTLE=${WF_FORCE_WINTER_RUIN_CASTLE:-0}
 WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
@@ -57,6 +63,11 @@ WF_WAIT_FOR_SUMMER_SAURIAN_KEEP=${WF_WAIT_FOR_SUMMER_SAURIAN_KEEP:-0}
 WF_WAIT_FOR_AUTUMN_CARRYOVER=${WF_WAIT_FOR_AUTUMN_CARRYOVER:-0}
 WF_WAIT_FOR_AUTUMN_ELF_KEEP=${WF_WAIT_FOR_AUTUMN_ELF_KEEP:-0}
 WF_WAIT_FOR_AUTUMN_DWARF_KEEP=${WF_WAIT_FOR_AUTUMN_DWARF_KEEP:-0}
+WF_WAIT_FOR_WINTER_STATE=${WF_WAIT_FOR_WINTER_STATE:-0}
+WF_WAIT_FOR_WINTER_UNDEAD_RAID=${WF_WAIT_FOR_WINTER_UNDEAD_RAID:-0}
+WF_WAIT_FOR_WINTER_ELF_RAID=${WF_WAIT_FOR_WINTER_ELF_RAID:-0}
+WF_WAIT_FOR_WINTER_DWARF_RAID=${WF_WAIT_FOR_WINTER_DWARF_RAID:-0}
+WF_WAIT_FOR_WINTER_RUIN_CASTLE=${WF_WAIT_FOR_WINTER_RUIN_CASTLE:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
@@ -183,7 +194,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_winter_end="$WF_FORCE_WINTER_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_winter_undead_raid="$WF_FORCE_WINTER_UNDEAD_RAID" -v force_winter_elf_raid="$WF_FORCE_WINTER_ELF_RAID" -v force_winter_dwarf_raid="$WF_FORCE_WINTER_DWARF_RAID" -v force_winter_ruin_castle="$WF_FORCE_WINTER_RUIN_CASTLE" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -590,6 +601,77 @@ inject_debug_overlay() {
           print "        name=wf_automation.autumn_dwarf_leader,wf_automation.autumn_dwarf_target_x,wf_automation.autumn_dwarf_target_y"
           print "    [/clear_variable]"
         }
+        print "[/event]"
+      }
+      if (scenario_id == "Winter_of_Storms") {
+        print ""
+        print "[event]"
+        print "    name=start"
+        print "    [lua]"
+        print "        code=<<"
+        print "            local wolves = wesnoth.units.find_on_map { side = 2, type = \"Wolf\" }"
+        print "            local rats = wesnoth.units.find_on_map { side = 2, type = \"Giant Rat\" }"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_state scenario=" scenario_id " wolves=\" .. tostring(#wolves) .. \" rats=\" .. tostring(#rats))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_undead_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            local leaders = wesnoth.units.find_on_map { side = 7, role = \"undead_leader\" }"
+        print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
+        print "            local side7_units = wesnoth.units.find_on_map { side = 7 }"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_undead_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side7_units=\" .. tostring(#side7_units))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_elves_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            local leaders = wesnoth.units.find_on_map { side = 6, role = \"elf_leader\" }"
+        print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
+        print "            local side6_units = wesnoth.units.find_on_map { side = 6 }"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_elves_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side6_units=\" .. tostring(#side6_units))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_dwarves_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            local leaders = wesnoth.units.find_on_map { side = 6, role = \"dwarf_leader\" }"
+        print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
+        print "            local side6_units = wesnoth.units.find_on_map { side = 6 }"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_dwarves_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side6_units=\" .. tostring(#side6_units))"
+        print "        >>"
+        print "    [/lua]"
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=ruin_projects"
+        print "    first_time_only=no"
+        print "    [if]"
+        print "        [have_location]"
+        print "            x=$wf_automation.winter_ruin_x"
+        print "            y=$wf_automation.winter_ruin_y"
+        print "            terrain=Rb"
+        print "        [/have_location]"
+        print "        [then]"
+        print "            [lua]"
+        print "                code=<<"
+        print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_castle scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
+        print "                >>"
+        print "            [/lua]"
+        print "        [/then]"
+        print "    [/if]"
         print "[/event]"
       }
       if (scenario_id == "A_New_Beginning" && force_keep == "1") {
@@ -1201,6 +1283,92 @@ inject_debug_overlay() {
           print "    [/if]"
         }
       }
+      if (scenario_id == "Winter_of_Storms") {
+        if (force_winter_undead_raid == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [fire_event]"
+          print "                name=new_undead_raid"
+          print "            [/fire_event]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+        if (force_winter_elf_raid == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [fire_event]"
+          print "                name=new_elves_raid"
+          print "            [/fire_event]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+        if (force_winter_dwarf_raid == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [fire_event]"
+          print "                name=new_dwarves_raid"
+          print "            [/fire_event]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+        if (force_winter_ruin_castle == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [store_unit]"
+          print "                [filter]"
+          print "                    id=Hero"
+          print "                [/filter]"
+          print "                variable=wf_automation.winter_ruin_target"
+          print "            [/store_unit]"
+          print "            [set_variable]"
+          print "                name=wf_automation.winter_ruin_x"
+          print "                value=$wf_automation.winter_ruin_target.x"
+          print "            [/set_variable]"
+          print "            [set_variable]"
+          print "                name=wf_automation.winter_ruin_y"
+          print "                value=$wf_automation.winter_ruin_target.y"
+          print "            [/set_variable]"
+          print "            [terrain]"
+          print "                x,y=$wf_automation.winter_ruin_x,$wf_automation.winter_ruin_y"
+          print "                terrain=Kvr"
+          print "            [/terrain]"
+          print "            [lua]"
+          print "                code=<<"
+          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_seed scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
+          print "                >>"
+          print "            [/lua]"
+          print "            [terrain]"
+          print "                x,y=$wf_automation.winter_ruin_x,$wf_automation.winter_ruin_y"
+          print "                terrain=Rb"
+          print "            [/terrain]"
+          print "            [lua]"
+          print "                code=<<"
+          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_castle scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
+          print "                >>"
+          print "            [/lua]"
+          print "            [clear_variable]"
+          print "                name=wf_automation.winter_ruin_target"
+          print "            [/clear_variable]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+      }
       if (scenario_id == "A_New_Beginning" && force_season_end == "1") {
         print "    [lua]"
         print "        code=<<"
@@ -1220,6 +1388,15 @@ inject_debug_overlay() {
         print "        name=wf_time_over"
         print "    [/fire_event]"
       } else if (scenario_id == "Autumn_of_Gold" && force_autumn_end == "1") {
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        print "    [fire_event]"
+        print "        name=wf_time_over"
+        print "    [/fire_event]"
+      } else if (scenario_id == "Winter_of_Storms" && force_winter_end == "1") {
         print "    [lua]"
         print "        code=<<"
         print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
@@ -1291,6 +1468,7 @@ sync_addon() {
     inject_debug_overlay "$addon_dir/scenarios/summer_of_dreams.cfg" "Summer_of_Dreams"
     inject_debug_overlay "$addon_dir/scenarios/autumn_of_gold.cfg" "Autumn_of_Gold"
     inject_debug_overlay "$addon_dir/scenarios/winter_of_storms.cfg" "Winter_of_Storms"
+    inject_debug_overlay "$addon_dir/scenarios/spring_of_raindrops.cfg" "Spring_of_Raindrops"
     apply_runtime_overrides "$addon_dir"
   fi
 }
@@ -1298,6 +1476,7 @@ sync_addon() {
 apply_runtime_overrides() {
   local addon_dir=$1
   local enemies_path="$addon_dir/utils/enemies.cfg"
+  local winter_path="$addon_dir/scenarios/winter_of_storms.cfg"
 
   if [[ "$WF_FORCE_AUTUMN_ELF_KEEP" == "1" ]]; then
     perl -0pi -e 's/(#define NEW_ELVES_RAIDS LIMIT.*?\{VARIABLE REPEAT_b 0\}\n)\s*\{RANDOM_VAR build_castle \(yes,yes,no\)\}/$1        {VARIABLE build_castle yes}/s' "$enemies_path"
@@ -1305,6 +1484,10 @@ apply_runtime_overrides() {
 
   if [[ "$WF_FORCE_AUTUMN_DWARF_KEEP" == "1" ]]; then
     perl -0pi -e 's/(#define NEW_DWARVES_RAIDS LIMIT.*?\{VARIABLE REPEAT_b 0\}\n)\s*\{RANDOM_VAR build_castle \(yes,yes,no\)\}/$1        {VARIABLE build_castle yes}/s' "$enemies_path"
+  fi
+
+  if [[ "$WF_FORCE_WINTER_RUIN_CASTLE" == "1" ]]; then
+    perl -0pi -e 's/\{RANDOM_VAR do_collapse \(no,yes\)\}/{VARIABLE do_collapse yes}/g' "$winter_path"
   fi
 }
 
@@ -1638,6 +1821,29 @@ main() {
     if [[ -n "$WF_CHAIN_SCENARIO_3" ]]; then
       wait_for_scenario_entry "$log_path" "$WF_CHAIN_SCENARIO_2" "$WF_CHAIN_SCENARIO_3" "chain_scenario_3" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
     fi
+    if [[ "$WF_WAIT_FOR_WINTER_STATE" == "1" ]]; then
+      wait_for_log_text "$log_path" "WF_AUTOMATION winter_state scenario=Winter_of_Storms" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "winter_state status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_UNDEAD_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_undead_raid scenario=Winter_of_Storms" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "winter_undead_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_ELF_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_elves_raid scenario=Winter_of_Storms" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "winter_elves_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_DWARF_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_dwarves_raid scenario=Winter_of_Storms" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "winter_dwarves_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_RUIN_CASTLE" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_ruin_castle scenario=Winter_of_Storms" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "winter_ruin_castle status=$run_status"
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_4" ]]; then
+      wait_for_scenario_entry "$log_path" "$WF_CHAIN_SCENARIO_3" "$WF_CHAIN_SCENARIO_4" "chain_scenario_4" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    fi
   fi
 
   local after_log
@@ -1656,6 +1862,7 @@ main() {
   local next_reached_turn=""
   local autumn_reached_turn=""
   local winter_reached_turn=""
+  local spring_reached_turn=""
   local summer_outlaw_raid_seen=""
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
@@ -1671,6 +1878,11 @@ main() {
   local autumn_carryover_seen=""
   local autumn_elf_keep_seen=""
   local autumn_dwarf_keep_seen=""
+  local winter_state_seen=""
+  local winter_undead_raid_seen=""
+  local winter_elf_raid_seen=""
+  local winter_dwarf_raid_seen=""
+  local winter_ruin_castle_seen=""
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
@@ -1681,6 +1893,9 @@ main() {
     fi
     if [[ -n "$WF_CHAIN_SCENARIO_3" ]]; then
       winter_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_3")
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_4" ]]; then
+      spring_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_4")
     fi
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
@@ -1781,6 +1996,41 @@ main() {
         autumn_dwarf_keep_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_WINTER_STATE" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_state scenario=Winter_of_Storms" "$log_path"; then
+        winter_state_seen=yes
+      else
+        winter_state_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_UNDEAD_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_undead_raid scenario=Winter_of_Storms" "$log_path"; then
+        winter_undead_raid_seen=yes
+      else
+        winter_undead_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_ELF_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_elves_raid scenario=Winter_of_Storms" "$log_path"; then
+        winter_elf_raid_seen=yes
+      else
+        winter_elf_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_DWARF_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_dwarves_raid scenario=Winter_of_Storms" "$log_path"; then
+        winter_dwarf_raid_seen=yes
+      else
+        winter_dwarf_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_WINTER_RUIN_CASTLE" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_ruin_castle scenario=Winter_of_Storms" "$log_path"; then
+        winter_ruin_castle_seen=yes
+      else
+        winter_ruin_castle_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
         summer_calamity_kill_seen=yes
@@ -1809,6 +2059,7 @@ main() {
     echo "next_reached_turn=$next_reached_turn"
     echo "autumn_reached_turn=$autumn_reached_turn"
     echo "winter_reached_turn=$winter_reached_turn"
+    echo "spring_reached_turn=$spring_reached_turn"
     echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
@@ -1825,6 +2076,11 @@ main() {
     echo "autumn_carryover_seen=$autumn_carryover_seen"
     echo "autumn_elf_keep_seen=$autumn_elf_keep_seen"
     echo "autumn_dwarf_keep_seen=$autumn_dwarf_keep_seen"
+    echo "winter_state_seen=$winter_state_seen"
+    echo "winter_undead_raid_seen=$winter_undead_raid_seen"
+    echo "winter_elf_raid_seen=$winter_elf_raid_seen"
+    echo "winter_dwarf_raid_seen=$winter_dwarf_raid_seen"
+    echo "winter_ruin_castle_seen=$winter_ruin_castle_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
     echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
