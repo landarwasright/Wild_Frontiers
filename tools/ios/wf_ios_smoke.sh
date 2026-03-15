@@ -18,6 +18,7 @@ WF_BONUS_DOWN_COUNT=${WF_BONUS_DOWN_COUNT:-12}
 WF_END_TURNS=${WF_END_TURNS:-2}
 WF_ARTIFACT_ROOT=${WF_ARTIFACT_ROOT:-$ROOT_DIR/working/ios-smoke}
 WF_LAUNCH_DELAY=${WF_LAUNCH_DELAY:-8}
+WF_CALAMITY_DIALOG_ADVANCES=${WF_CALAMITY_DIALOG_ADVANCES:-6}
 WF_USE_DEBUG_OVERLAY=${WF_USE_DEBUG_OVERLAY:-1}
 WF_NOCACHE=${WF_NOCACHE:-1}
 WF_ADVANCE_TIMEOUT=${WF_ADVANCE_TIMEOUT:-0}
@@ -39,7 +40,9 @@ WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
 WF_WAIT_FOR_SUMMER_UNDEAD_RAID=${WF_WAIT_FOR_SUMMER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY=${WF_WAIT_FOR_SUMMER_CALAMITY:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
+WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
+WF_WAIT_FOR_SUMMER_CALAMITY_KILL=${WF_WAIT_FOR_SUMMER_CALAMITY_KILL:-0}
 WF_TRACE=${WF_TRACE:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
@@ -161,7 +164,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -505,6 +508,84 @@ inject_debug_overlay() {
           print "        [/then]"
           print "    [/if]"
         }
+        if (force_summer_calamity_kill == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs")) {
+          print "    [if]"
+          print "        [and]"
+          print "            [variable]"
+          print "                name=turn_number"
+          print "                numerical_equals=1"
+          print "            [/variable]"
+          print "            [have_unit]"
+          print "                id=Hero"
+          print "            [/have_unit]"
+          print "            [have_unit]"
+          print "                side=8"
+          if (force_summer_calamity_type == "lich") {
+            print "                role=lich"
+          }
+          if (force_summer_calamity_type == "orcs") {
+            print "                role=orc_calamity_leader"
+          }
+          print "            [/have_unit]"
+          print "        [/and]"
+          print "        [then]"
+          print "            [store_unit]"
+          print "                [filter]"
+          print "                    id=Hero"
+          print "                [/filter]"
+          print "                variable=wf_automation.hero_kill"
+          print "            [/store_unit]"
+          print "            [store_unit]"
+          print "                [filter]"
+          print "                    side=8"
+          if (force_summer_calamity_type == "lich") {
+            print "                    role=lich"
+          }
+          if (force_summer_calamity_type == "orcs") {
+            print "                    role=orc_calamity_leader"
+          }
+          print "                [/filter]"
+          print "                variable=wf_automation.calamity_target"
+          print "            [/store_unit]"
+          print "            [fire_event]"
+          print "                name=last breath"
+          print "                [primary_unit]"
+          print "                    x,y=$wf_automation.calamity_target[0].x,$wf_automation.calamity_target[0].y"
+          print "                [/primary_unit]"
+          print "                [secondary_unit]"
+          print "                    x,y=$wf_automation.hero_kill.x,$wf_automation.hero_kill.y"
+          print "                [/secondary_unit]"
+          print "            [/fire_event]"
+          print "            [fire_event]"
+          print "                name=die"
+          print "                [primary_unit]"
+          print "                    x,y=$wf_automation.calamity_target[0].x,$wf_automation.calamity_target[0].y"
+          print "                [/primary_unit]"
+          print "                [secondary_unit]"
+          print "                    x,y=$wf_automation.hero_kill.x,$wf_automation.hero_kill.y"
+          print "                [/secondary_unit]"
+          print "            [/fire_event]"
+          print "            [kill]"
+          print "                id=$wf_automation.calamity_target[0].id"
+          print "                animate=no"
+          print "                fire_event=no"
+          print "            [/kill]"
+          print "            [lua]"
+          print "                code=<<"
+          if (force_summer_calamity_type == "lich") {
+            print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_kill scenario=" scenario_id " type=lich role=lich\")"
+          }
+          if (force_summer_calamity_type == "orcs") {
+            print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_kill scenario=" scenario_id " type=orcs role=orc_calamity_leader\")"
+          }
+          print "                >>"
+          print "            [/lua]"
+          print "            [clear_variable]"
+          print "                name=wf_automation.hero_kill,wf_automation.calamity_target"
+          print "            [/clear_variable]"
+          print "        [/then]"
+          print "    [/if]"
+        }
       }
       if (scenario_id == "A_New_Beginning" && force_season_end == "1") {
         print "    [lua]"
@@ -632,6 +713,24 @@ wait_for_log_text() {
   done
 
   echo "Timed out waiting for log text: $needle" >&2
+  return 1
+}
+
+wait_for_log_text_with_return() {
+  local log_path=$1
+  local needle=$2
+  local timeout=${3:-60}
+  local deadline=$((SECONDS + timeout))
+
+  while (( SECONDS < deadline )); do
+    if [[ -f "$log_path" ]] && rg -Fq "$needle" "$log_path"; then
+      return 0
+    fi
+    send_key return
+    sleep 2
+  done
+
+  echo "Timed out waiting for log text while advancing dialog: $needle" >&2
   return 1
 }
 
@@ -818,6 +917,12 @@ main() {
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING" == "1" ]]; then
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_calamity_sighting scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_calamity_sighting status=$run_status"
+      send_key return "$WF_CALAMITY_DIALOG_ADVANCES"
+      sleep 2
+    fi
+    if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_calamity_kill status=$run_status"
     fi
     if (( WF_NEXT_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_NEXT_END_TURNS" "$WF_NEXT_SCENARIO" "${WF_NEXT_SCENARIO}-turn" || run_status=$?
@@ -846,6 +951,7 @@ main() {
   local summer_calamity_seen=""
   local summer_calamity_side8_units=""
   local summer_calamity_sighting_seen=""
+  local summer_calamity_kill_seen=""
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
@@ -891,6 +997,13 @@ main() {
         summer_calamity_sighting_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
+        summer_calamity_kill_seen=yes
+      else
+        summer_calamity_kill_seen=no
+      fi
+    fi
   fi
 
   {
@@ -910,6 +1023,7 @@ main() {
     echo "summer_calamity_seen=$summer_calamity_seen"
     echo "summer_calamity_side8_units=$summer_calamity_side8_units"
     echo "summer_calamity_sighting_seen=$summer_calamity_sighting_seen"
+    echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
   note_progress "summary_written status=$run_status"
