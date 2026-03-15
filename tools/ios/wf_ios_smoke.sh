@@ -35,12 +35,14 @@ WF_FORCE_SUMMER_ORC_RAID=${WF_FORCE_SUMMER_ORC_RAID:-0}
 WF_FORCE_SUMMER_UNDEAD_RAID=${WF_FORCE_SUMMER_UNDEAD_RAID:-0}
 WF_FORCE_SUMMER_CALAMITY_TYPE=${WF_FORCE_SUMMER_CALAMITY_TYPE:-}
 WF_FORCE_SUMMER_LOYALIST_CAMP=${WF_FORCE_SUMMER_LOYALIST_CAMP:-0}
+WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP=${WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
 WF_WAIT_FOR_SUMMER_UNDEAD_RAID=${WF_WAIT_FOR_SUMMER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY=${WF_WAIT_FOR_SUMMER_CALAMITY:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_CAMP=${WF_WAIT_FOR_SUMMER_LOYALIST_CAMP:-0}
+WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP=${WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
@@ -167,7 +169,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -289,6 +291,25 @@ inject_debug_overlay() {
             print "    [lua]"
             print "        code=<<"
             print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_sighting scenario=" scenario_id " type=loyalists event=calamity_loyalists_sighted\")"
+            print "        >>"
+            print "    [/lua]"
+            print "[/event]"
+          }
+          if (force_summer_loyalist_ditch_keep == "1" && force_summer_calamity_type == "loyalists") {
+            print ""
+            print "[event]"
+            print "    name=side 8 turn refresh"
+            print "    first_time_only=no"
+            print "    [filter_condition]"
+            print "        [have_unit]"
+            print "            side=8"
+            print "            role=evil_loyalist"
+            print "            canrecruit=no"
+            print "        [/have_unit]"
+            print "    [/filter_condition]"
+            print "    [lua]"
+            print "        code=<<"
+            print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_loyalist_ditch_keep scenario=" scenario_id "\")"
             print "        >>"
             print "    [/lua]"
             print "[/event]"
@@ -657,6 +678,12 @@ inject_debug_overlay() {
           print "                    [/move_unit]"
           print "                [/else]"
           print "            [/if]"
+          print "            [fire_event]"
+          print "                name=moveto"
+          print "                [primary_unit]"
+          print "                    x,y=$wf_automation.loyalist_target_x,$wf_automation.loyalist_target_y"
+          print "                [/primary_unit]"
+          print "            [/fire_event]"
           print "            [if]"
           print "                [have_location]"
           print "                    x=$wf_automation.loyalist_target_x"
@@ -671,6 +698,12 @@ inject_debug_overlay() {
           print "                    [/lua]"
           print "                [/then]"
           print "            [/if]"
+          if (force_summer_loyalist_ditch_keep == "1") {
+            print "            [gold]"
+            print "                side=8"
+            print "                amount=-99999"
+            print "            [/gold]"
+          }
           print "            [clear_variable]"
           print "                name=wf_automation.loyalist_leader,wf_automation.loyalist_target_x,wf_automation.loyalist_target_y"
           print "            [/clear_variable]"
@@ -1121,6 +1154,10 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_loyalist_camp scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_loyalist_camp status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_loyalist_ditch_keep scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_loyalist_ditch_keep status=$run_status"
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_calamity_kill status=$run_status"
@@ -1157,6 +1194,7 @@ main() {
   local summer_calamity_side8_units=""
   local summer_calamity_sighting_seen=""
   local summer_loyalist_camp_seen=""
+  local summer_loyalist_ditch_keep_seen=""
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
@@ -1212,6 +1250,13 @@ main() {
         summer_loyalist_camp_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_loyalist_ditch_keep scenario=$WF_NEXT_SCENARIO" "$log_path"; then
+        summer_loyalist_ditch_keep_seen=yes
+      else
+        summer_loyalist_ditch_keep_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
         summer_calamity_kill_seen=yes
@@ -1247,6 +1292,7 @@ main() {
     echo "summer_calamity_side8_units=$summer_calamity_side8_units"
     echo "summer_calamity_sighting_seen=$summer_calamity_sighting_seen"
     echo "summer_loyalist_camp_seen=$summer_loyalist_camp_seen"
+    echo "summer_loyalist_ditch_keep_seen=$summer_loyalist_ditch_keep_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
     echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
