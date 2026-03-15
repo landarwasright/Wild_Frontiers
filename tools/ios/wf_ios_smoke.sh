@@ -44,6 +44,7 @@ WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
 WF_WAIT_FOR_SUMMER_UNDEAD_RAID=${WF_WAIT_FOR_SUMMER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY=${WF_WAIT_FOR_SUMMER_CALAMITY:-0}
 WF_WAIT_FOR_SUMMER_GRYPHON_NEST=${WF_WAIT_FOR_SUMMER_GRYPHON_NEST:-0}
+WF_WAIT_FOR_SUMMER_YETIS=${WF_WAIT_FOR_SUMMER_YETIS:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_CAMP=${WF_WAIT_FOR_SUMMER_LOYALIST_CAMP:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP=${WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_WAIT_FOR_SUMMER_SAURIAN_KEEP=${WF_WAIT_FOR_SUMMER_SAURIAN_KEEP:-0}
@@ -830,6 +831,25 @@ inject_debug_overlay() {
           print "        [/then]"
           print "    [/if]"
         }
+        if (force_summer_calamity_type == "yetis") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [lua]"
+          print "                code=<<"
+          print "                    local leader = wesnoth.units.find_on_map { side = 8, role = \"yeti_leader\" }[1]"
+          print "                    local buddy = wesnoth.units.find_on_map { side = 8, role = \"yeti_buddy\" }[1]"
+          print "                    if leader and buddy then"
+          print "                        wesnoth.log(\"warning\", \"WF_AUTOMATION summer_yetis scenario=" scenario_id " leader_x=\" .. tostring(leader.x or \"\") .. \" leader_y=\" .. tostring(leader.y or \"\") .. \" buddy_x=\" .. tostring(buddy.x or \"\") .. \" buddy_y=\" .. tostring(buddy.y or \"\"))"
+          print "                    end"
+          print "                >>"
+          print "            [/lua]"
+          print "        [/then]"
+          print "    [/if]"
+        }
         if (force_summer_calamity_kill == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves")) {
           print "    [if]"
           print "        [and]"
@@ -1268,6 +1288,10 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_gryphon_nest scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_gryphon_nest status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_YETIS" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_yetis scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_yetis status=$run_status"
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING" == "1" ]]; then
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_calamity_sighting scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_calamity_sighting status=$run_status"
@@ -1321,6 +1345,7 @@ main() {
   local summer_calamity_seen=""
   local summer_calamity_side8_units=""
   local summer_gryphon_nest_seen=""
+  local summer_yetis_seen=""
   local summer_calamity_sighting_seen=""
   local summer_loyalist_camp_seen=""
   local summer_loyalist_ditch_keep_seen=""
@@ -1371,6 +1396,13 @@ main() {
         summer_gryphon_nest_seen=yes
       else
         summer_gryphon_nest_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SUMMER_YETIS" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_yetis scenario=$WF_NEXT_SCENARIO" "$log_path"; then
+        summer_yetis_seen=yes
+      else
+        summer_yetis_seen=no
       fi
     fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING" == "1" ]]; then
@@ -1435,6 +1467,7 @@ main() {
     echo "summer_calamity_seen=$summer_calamity_seen"
     echo "summer_calamity_side8_units=$summer_calamity_side8_units"
     echo "summer_gryphon_nest_seen=$summer_gryphon_nest_seen"
+    echo "summer_yetis_seen=$summer_yetis_seen"
     echo "summer_calamity_sighting_seen=$summer_calamity_sighting_seen"
     echo "summer_loyalist_camp_seen=$summer_loyalist_camp_seen"
     echo "summer_loyalist_ditch_keep_seen=$summer_loyalist_ditch_keep_seen"
