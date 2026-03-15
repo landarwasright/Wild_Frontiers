@@ -254,6 +254,30 @@ inject_debug_overlay() {
             print "    [/lua]"
             print "[/event]"
           }
+          if (force_summer_calamity_type == "drakes") {
+            print ""
+            print "[event]"
+            print "    name=calamity_drakes_sighted"
+            print "    first_time_only=no"
+            print "    [lua]"
+            print "        code=<<"
+            print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_sighting scenario=" scenario_id " type=drakes event=calamity_drakes_sighted\")"
+            print "        >>"
+            print "    [/lua]"
+            print "[/event]"
+          }
+          if (force_summer_calamity_type == "dwarves") {
+            print ""
+            print "[event]"
+            print "    name=calamity_dwarves_sighted"
+            print "    first_time_only=no"
+            print "    [lua]"
+            print "        code=<<"
+            print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_sighting scenario=" scenario_id " type=dwarves event=calamity_dwarves_sighted\")"
+            print "        >>"
+            print "    [/lua]"
+            print "[/event]"
+          }
         }
       }
       if (scenario_id == "A_New_Beginning" && force_keep == "1") {
@@ -461,7 +485,7 @@ inject_debug_overlay() {
         print "            end"
         print "        >>"
         print "    [/lua]"
-        if (force_summer_calamity_sighting == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs")) {
+        if (force_summer_calamity_sighting == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves")) {
           print "    [if]"
           print "        [and]"
           print "            [variable]"
@@ -495,6 +519,12 @@ inject_debug_overlay() {
           if (force_summer_calamity_type == "orcs") {
             print "                name=calamity_orcs_sighted"
           }
+          if (force_summer_calamity_type == "drakes") {
+            print "                name=calamity_drakes_sighted"
+          }
+          if (force_summer_calamity_type == "dwarves") {
+            print "                name=calamity_dwarves_sighted"
+          }
           print "                [primary_unit]"
           print "                    x,y=$wf_automation.calamity_spot[0].x,$wf_automation.calamity_spot[0].y"
           print "                [/primary_unit]"
@@ -508,7 +538,7 @@ inject_debug_overlay() {
           print "        [/then]"
           print "    [/if]"
         }
-        if (force_summer_calamity_kill == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs")) {
+        if (force_summer_calamity_kill == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves")) {
           print "    [if]"
           print "        [and]"
           print "            [variable]"
@@ -525,6 +555,12 @@ inject_debug_overlay() {
           }
           if (force_summer_calamity_type == "orcs") {
             print "                role=orc_calamity_leader"
+          }
+          if (force_summer_calamity_type == "drakes") {
+            print "                role=drake_leader"
+          }
+          if (force_summer_calamity_type == "dwarves") {
+            print "                role=dwarf_calamity_leader"
           }
           print "            [/have_unit]"
           print "        [/and]"
@@ -543,6 +579,12 @@ inject_debug_overlay() {
           }
           if (force_summer_calamity_type == "orcs") {
             print "                    role=orc_calamity_leader"
+          }
+          if (force_summer_calamity_type == "drakes") {
+            print "                    role=drake_leader"
+          }
+          if (force_summer_calamity_type == "dwarves") {
+            print "                    role=dwarf_calamity_leader"
           }
           print "                [/filter]"
           print "                variable=wf_automation.calamity_target"
@@ -577,6 +619,12 @@ inject_debug_overlay() {
           }
           if (force_summer_calamity_type == "orcs") {
             print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_kill scenario=" scenario_id " type=orcs role=orc_calamity_leader\")"
+          }
+          if (force_summer_calamity_type == "drakes") {
+            print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_kill scenario=" scenario_id " type=drakes role=drake_leader\")"
+          }
+          if (force_summer_calamity_type == "dwarves") {
+            print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_kill scenario=" scenario_id " type=dwarves role=dwarf_calamity_leader\")"
           }
           print "                >>"
           print "            [/lua]"
