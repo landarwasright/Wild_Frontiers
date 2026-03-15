@@ -24,11 +24,15 @@ WF_NOCACHE=${WF_NOCACHE:-1}
 WF_ADVANCE_TIMEOUT=${WF_ADVANCE_TIMEOUT:-0}
 WF_START_SCENARIO=${WF_START_SCENARIO:-A_New_Beginning}
 WF_NEXT_SCENARIO=${WF_NEXT_SCENARIO:-Summer_of_Dreams}
+WF_CHAIN_SCENARIO_2=${WF_CHAIN_SCENARIO_2:-}
+WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
 WF_NEXT_END_TURNS=${WF_NEXT_END_TURNS:-0}
 WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
 WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
 WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
 WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
+WF_FORCE_SUMMER_END=${WF_FORCE_SUMMER_END:-0}
+WF_FORCE_AUTUMN_END=${WF_FORCE_AUTUMN_END:-0}
 WF_FORCE_SUMMER_OUTLAW_RAID=${WF_FORCE_SUMMER_OUTLAW_RAID:-0}
 WF_FORCE_SUMMER_BANDIT_RAID=${WF_FORCE_SUMMER_BANDIT_RAID:-0}
 WF_FORCE_SUMMER_ORC_RAID=${WF_FORCE_SUMMER_ORC_RAID:-0}
@@ -38,6 +42,8 @@ WF_FORCE_SUMMER_GRYPHON_NEST=${WF_FORCE_SUMMER_GRYPHON_NEST:-0}
 WF_FORCE_SUMMER_LOYALIST_CAMP=${WF_FORCE_SUMMER_LOYALIST_CAMP:-0}
 WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP=${WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_FORCE_SUMMER_SAURIAN_KEEP=${WF_FORCE_SUMMER_SAURIAN_KEEP:-0}
+WF_FORCE_AUTUMN_ELF_KEEP=${WF_FORCE_AUTUMN_ELF_KEEP:-0}
+WF_FORCE_AUTUMN_DWARF_KEEP=${WF_FORCE_AUTUMN_DWARF_KEEP:-0}
 WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
@@ -48,6 +54,9 @@ WF_WAIT_FOR_SUMMER_YETIS=${WF_WAIT_FOR_SUMMER_YETIS:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_CAMP=${WF_WAIT_FOR_SUMMER_LOYALIST_CAMP:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP=${WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_WAIT_FOR_SUMMER_SAURIAN_KEEP=${WF_WAIT_FOR_SUMMER_SAURIAN_KEEP:-0}
+WF_WAIT_FOR_AUTUMN_CARRYOVER=${WF_WAIT_FOR_AUTUMN_CARRYOVER:-0}
+WF_WAIT_FOR_AUTUMN_ELF_KEEP=${WF_WAIT_FOR_AUTUMN_ELF_KEEP:-0}
+WF_WAIT_FOR_AUTUMN_DWARF_KEEP=${WF_WAIT_FOR_AUTUMN_DWARF_KEEP:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
@@ -174,7 +183,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -380,6 +389,208 @@ inject_debug_overlay() {
             print "[/event]"
           }
         }
+      }
+      if (scenario_id == "Autumn_of_Gold") {
+        print ""
+        print "[event]"
+        print "    name=new_elves_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_elves_raid scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        if (force_autumn_elf_keep == "1") {
+          print "    [store_unit]"
+          print "        [filter]"
+          print "            side=6"
+          print "            role=elf_leader"
+          print "            canrecruit=yes"
+          print "        [/filter]"
+          print "        variable=wf_automation.autumn_elf_leader"
+          print "    [/store_unit]"
+          print "    [if]"
+          print "        [have_unit]"
+          print "            side=6"
+          print "            role=elf_leader"
+          print "            canrecruit=yes"
+          print "        [/have_unit]"
+          print "        [then]"
+          print "            [set_variable]"
+          print "                name=wf_automation.autumn_elf_target_x"
+          print "                value=$wf_automation.autumn_elf_leader.goto_x"
+          print "            [/set_variable]"
+          print "            [set_variable]"
+          print "                name=wf_automation.autumn_elf_target_y"
+          print "                value=$wf_automation.autumn_elf_leader.goto_y"
+          print "            [/set_variable]"
+          print "            [lua]"
+          print "                code=<<"
+          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_elf_keep_target scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.autumn_elf_target_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.autumn_elf_target_y\"] or \"\"))"
+          print "                >>"
+          print "            [/lua]"
+          print "            [if]"
+          print "                [have_unit]"
+          print "                    side=6"
+          print "                    role=elf_leader"
+          print "                    canrecruit=yes"
+          print "                    x=$wf_automation.autumn_elf_target_x"
+          print "                    y=$wf_automation.autumn_elf_target_y"
+          print "                [/have_unit]"
+          print "                [then]"
+          print "                    [fire_event]"
+          print "                        name=side 6 turn"
+          print "                    [/fire_event]"
+          print "                [/then]"
+          print "                [else]"
+          print "                    [move_unit]"
+          print "                        side=6"
+          print "                        role=elf_leader"
+          print "                        canrecruit=yes"
+          print "                        to_x=$wf_automation.autumn_elf_target_x"
+          print "                        to_y=$wf_automation.autumn_elf_target_y"
+          print "                    [/move_unit]"
+          print "                [/else]"
+          print "            [/if]"
+          print "            [fire_event]"
+          print "                name=moveto"
+          print "                [primary_unit]"
+          print "                    x,y=$wf_automation.autumn_elf_target_x,$wf_automation.autumn_elf_target_y"
+          print "                [/primary_unit]"
+          print "            [/fire_event]"
+          print "            [if]"
+          print "                [not]"
+          print "                    [have_location]"
+          print "                        x=$wf_automation.autumn_elf_target_x"
+          print "                        y=$wf_automation.autumn_elf_target_y"
+          print "                        terrain=Kv"
+          print "                    [/have_location]"
+          print "                [/not]"
+          print "                [then]"
+          print "                    {BUILD_SIDE6_KEEP elves Kv Cv $wf_automation.autumn_elf_target_x $wf_automation.autumn_elf_target_y sw,nw,s}"
+          print "                [/then]"
+          print "            [/if]"
+          print "            [if]"
+          print "                [have_location]"
+          print "                    x=$wf_automation.autumn_elf_target_x"
+          print "                    y=$wf_automation.autumn_elf_target_y"
+          print "                    terrain=Kv"
+          print "                [/have_location]"
+          print "                [then]"
+          print "                    [lua]"
+          print "                        code=<<"
+          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_elf_keep scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.autumn_elf_target_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.autumn_elf_target_y\"] or \"\"))"
+          print "                        >>"
+          print "                    [/lua]"
+          print "                [/then]"
+          print "            [/if]"
+          print "        [/then]"
+          print "    [/if]"
+          print "    [clear_variable]"
+          print "        name=wf_automation.autumn_elf_leader,wf_automation.autumn_elf_target_x,wf_automation.autumn_elf_target_y"
+          print "    [/clear_variable]"
+        }
+        print "[/event]"
+        print ""
+        print "[event]"
+        print "    name=new_dwarves_raid"
+        print "    first_time_only=no"
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_dwarves_raid scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        if (force_autumn_dwarf_keep == "1") {
+          print "    [store_unit]"
+          print "        [filter]"
+          print "            side=6"
+          print "            role=dwarf_leader"
+          print "            canrecruit=yes"
+          print "        [/filter]"
+          print "        variable=wf_automation.autumn_dwarf_leader"
+          print "    [/store_unit]"
+          print "    [if]"
+          print "        [have_unit]"
+          print "            side=6"
+          print "            role=dwarf_leader"
+          print "            canrecruit=yes"
+          print "        [/have_unit]"
+          print "        [then]"
+          print "            [set_variable]"
+          print "                name=wf_automation.autumn_dwarf_target_x"
+          print "                value=$wf_automation.autumn_dwarf_leader.goto_x"
+          print "            [/set_variable]"
+          print "            [set_variable]"
+          print "                name=wf_automation.autumn_dwarf_target_y"
+          print "                value=$wf_automation.autumn_dwarf_leader.goto_y"
+          print "            [/set_variable]"
+          print "            [lua]"
+          print "                code=<<"
+          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_dwarf_keep_target scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.autumn_dwarf_target_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.autumn_dwarf_target_y\"] or \"\"))"
+          print "                >>"
+          print "            [/lua]"
+          print "            [if]"
+          print "                [have_unit]"
+          print "                    side=6"
+          print "                    role=dwarf_leader"
+          print "                    canrecruit=yes"
+          print "                    x=$wf_automation.autumn_dwarf_target_x"
+          print "                    y=$wf_automation.autumn_dwarf_target_y"
+          print "                [/have_unit]"
+          print "                [then]"
+          print "                    [fire_event]"
+          print "                        name=side 6 turn"
+          print "                    [/fire_event]"
+          print "                [/then]"
+          print "                [else]"
+          print "                    [move_unit]"
+          print "                        side=6"
+          print "                        role=dwarf_leader"
+          print "                        canrecruit=yes"
+          print "                        to_x=$wf_automation.autumn_dwarf_target_x"
+          print "                        to_y=$wf_automation.autumn_dwarf_target_y"
+          print "                    [/move_unit]"
+          print "                [/else]"
+          print "            [/if]"
+          print "            [fire_event]"
+          print "                name=moveto"
+          print "                [primary_unit]"
+          print "                    x,y=$wf_automation.autumn_dwarf_target_x,$wf_automation.autumn_dwarf_target_y"
+          print "                [/primary_unit]"
+          print "            [/fire_event]"
+          print "            [if]"
+          print "                [not]"
+          print "                    [have_location]"
+          print "                        x=$wf_automation.autumn_dwarf_target_x"
+          print "                        y=$wf_automation.autumn_dwarf_target_y"
+          print "                        terrain=Kud"
+          print "                    [/have_location]"
+          print "                [/not]"
+          print "                [then]"
+          print "                    {BUILD_SIDE6_KEEP dwarves Kud Cud $wf_automation.autumn_dwarf_target_x $wf_automation.autumn_dwarf_target_y n,se,ne}"
+          print "                [/then]"
+          print "            [/if]"
+          print "            [if]"
+          print "                [have_location]"
+          print "                    x=$wf_automation.autumn_dwarf_target_x"
+          print "                    y=$wf_automation.autumn_dwarf_target_y"
+          print "                    terrain=Kud"
+          print "                [/have_location]"
+          print "                [then]"
+          print "                    [lua]"
+          print "                        code=<<"
+          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_dwarf_keep scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.autumn_dwarf_target_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.autumn_dwarf_target_y\"] or \"\"))"
+          print "                        >>"
+          print "                    [/lua]"
+          print "                [/then]"
+          print "            [/if]"
+          print "        [/then]"
+          print "    [/if]"
+          print "    [clear_variable]"
+          print "        name=wf_automation.autumn_dwarf_leader,wf_automation.autumn_dwarf_target_x,wf_automation.autumn_dwarf_target_y"
+          print "    [/clear_variable]"
+        }
+        print "[/event]"
       }
       if (scenario_id == "A_New_Beginning" && force_keep == "1") {
         print ""
@@ -947,7 +1158,68 @@ inject_debug_overlay() {
           print "    [/if]"
         }
       }
+      if (scenario_id == "Autumn_of_Gold") {
+        print "    [lua]"
+        print "        code=<<"
+        print "            if tostring(wml.variables[\"turn_number\"]) == \"1\" then"
+        print "                local units = wesnoth.units.find_on_map { side = 8 }"
+        print "                local nest_units = 0"
+        print "                for _, unit in ipairs(units) do"
+        print "                    if unit.status and unit.status.nest then"
+        print "                        nest_units = nest_units + 1"
+        print "                    end"
+        print "                end"
+        print "                local lich_present = wesnoth.units.find_on_map { side = 8, role = \"lich\" }[1] and \"yes\" or \"no\""
+        print "                wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_carryover scenario=" scenario_id " side8_units=\" .. tostring(#units) .. \" nest_units=\" .. tostring(nest_units) .. \" lich_present=\" .. lich_present)"
+        print "            end"
+        print "        >>"
+        print "    [/lua]"
+        if (force_autumn_elf_keep == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [fire_event]"
+          print "                name=new_elves_raid"
+          print "            [/fire_event]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+        if (force_autumn_dwarf_keep == "1") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [fire_event]"
+          print "                name=new_dwarves_raid"
+          print "            [/fire_event]"
+          print "        [/then]"
+          print "    [/if]"
+        }
+      }
       if (scenario_id == "A_New_Beginning" && force_season_end == "1") {
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        print "    [fire_event]"
+        print "        name=wf_time_over"
+        print "    [/fire_event]"
+      } else if (scenario_id == "Summer_of_Dreams" && force_summer_end == "1") {
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        print "    [fire_event]"
+        print "        name=wf_time_over"
+        print "    [/fire_event]"
+      } else if (scenario_id == "Autumn_of_Gold" && force_autumn_end == "1") {
         print "    [lua]"
         print "        code=<<"
         print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
@@ -1017,6 +1289,22 @@ sync_addon() {
   if [[ "$WF_USE_DEBUG_OVERLAY" == "1" ]]; then
     inject_debug_overlay "$addon_dir/scenarios/a_new_beginning.cfg" "A_New_Beginning"
     inject_debug_overlay "$addon_dir/scenarios/summer_of_dreams.cfg" "Summer_of_Dreams"
+    inject_debug_overlay "$addon_dir/scenarios/autumn_of_gold.cfg" "Autumn_of_Gold"
+    inject_debug_overlay "$addon_dir/scenarios/winter_of_storms.cfg" "Winter_of_Storms"
+    apply_runtime_overrides "$addon_dir"
+  fi
+}
+
+apply_runtime_overrides() {
+  local addon_dir=$1
+  local enemies_path="$addon_dir/utils/enemies.cfg"
+
+  if [[ "$WF_FORCE_AUTUMN_ELF_KEEP" == "1" ]]; then
+    perl -0pi -e 's/(#define NEW_ELVES_RAIDS LIMIT.*?\{VARIABLE REPEAT_b 0\}\n)\s*\{RANDOM_VAR build_castle \(yes,yes,no\)\}/$1        {VARIABLE build_castle yes}/s' "$enemies_path"
+  fi
+
+  if [[ "$WF_FORCE_AUTUMN_DWARF_KEEP" == "1" ]]; then
+    perl -0pi -e 's/(#define NEW_DWARVES_RAIDS LIMIT.*?\{VARIABLE REPEAT_b 0\}\n)\s*\{RANDOM_VAR build_castle \(yes,yes,no\)\}/$1        {VARIABLE build_castle yes}/s' "$enemies_path"
   fi
 }
 
@@ -1092,6 +1380,21 @@ wait_for_log_text_with_return() {
 
   echo "Timed out waiting for log text while advancing dialog: $needle" >&2
   return 1
+}
+
+wait_for_scenario_entry() {
+  local log_path=$1
+  local from_scenario=$2
+  local to_scenario=$3
+  local label=$4
+  local timeout=${5:-60}
+
+  wait_for_log_text_with_return "$log_path" "WF_AUTOMATION event=wf_victory scenario=$from_scenario next=$to_scenario" "$timeout"
+  note_progress "${label}_victory_marker status=0"
+  wait_for_log_text_with_return "$log_path" "WF_AUTOMATION overlay_ready scenario=$to_scenario" "$timeout"
+  note_progress "${label}_overlay_ready status=0"
+  wait_for_log_text_with_return "$log_path" "WF_AUTOMATION side1_turn_refresh scenario=$to_scenario turn=1" "$timeout"
+  note_progress "${label}_turn1 status=0"
 }
 
 extract_log_turn() {
@@ -1258,12 +1561,7 @@ main() {
   note_progress "start_scenario_complete status=$run_status"
 
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
-    wait_for_log_text "$log_path" "WF_AUTOMATION event=wf_victory scenario=$WF_START_SCENARIO next=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
-    note_progress "next_scenario_victory_marker status=$run_status"
-    wait_for_log_text "$log_path" "WF_AUTOMATION overlay_ready scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
-    note_progress "next_scenario_overlay_ready status=$run_status"
-    wait_for_log_text "$log_path" "WF_AUTOMATION side1_turn_refresh scenario=$WF_NEXT_SCENARIO turn=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
-    note_progress "next_scenario_turn1 status=$run_status"
+    wait_for_scenario_entry "$log_path" "$WF_START_SCENARIO" "$WF_NEXT_SCENARIO" "next_scenario" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_outlaw_raid status=$run_status"
@@ -1322,6 +1620,24 @@ main() {
       advance_turns "$log_path" "$WF_NEXT_END_TURNS" "$WF_NEXT_SCENARIO" "${WF_NEXT_SCENARIO}-turn" || run_status=$?
       note_progress "next_scenario_complete status=$run_status"
     fi
+    if [[ -n "$WF_CHAIN_SCENARIO_2" ]]; then
+      wait_for_scenario_entry "$log_path" "$WF_NEXT_SCENARIO" "$WF_CHAIN_SCENARIO_2" "chain_scenario_2" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    fi
+    if [[ "$WF_WAIT_FOR_AUTUMN_CARRYOVER" == "1" ]]; then
+      wait_for_log_text "$log_path" "WF_AUTOMATION autumn_carryover scenario=Autumn_of_Gold" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "autumn_carryover status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_AUTUMN_ELF_KEEP" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION autumn_elf_keep scenario=Autumn_of_Gold" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "autumn_elf_keep status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_AUTUMN_DWARF_KEEP" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION autumn_dwarf_keep scenario=Autumn_of_Gold" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "autumn_dwarf_keep status=$run_status"
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_3" ]]; then
+      wait_for_scenario_entry "$log_path" "$WF_CHAIN_SCENARIO_2" "$WF_CHAIN_SCENARIO_3" "chain_scenario_3" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+    fi
   fi
 
   local after_log
@@ -1338,6 +1654,8 @@ main() {
     reached_turn=$(extract_turn_number "$ARTIFACT_DIR/turn-scan.txt")
   fi
   local next_reached_turn=""
+  local autumn_reached_turn=""
+  local winter_reached_turn=""
   local summer_outlaw_raid_seen=""
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
@@ -1350,11 +1668,20 @@ main() {
   local summer_loyalist_camp_seen=""
   local summer_loyalist_ditch_keep_seen=""
   local summer_saurian_keep_seen=""
+  local autumn_carryover_seen=""
+  local autumn_elf_keep_seen=""
+  local autumn_dwarf_keep_seen=""
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
+    if [[ -n "$WF_CHAIN_SCENARIO_2" ]]; then
+      autumn_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_2")
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_3" ]]; then
+      winter_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_3")
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
         summer_outlaw_raid_seen=yes
@@ -1433,6 +1760,27 @@ main() {
         summer_saurian_keep_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_AUTUMN_CARRYOVER" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION autumn_carryover scenario=Autumn_of_Gold" "$log_path"; then
+        autumn_carryover_seen=yes
+      else
+        autumn_carryover_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_AUTUMN_ELF_KEEP" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION autumn_elf_keep scenario=Autumn_of_Gold" "$log_path"; then
+        autumn_elf_keep_seen=yes
+      else
+        autumn_elf_keep_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_AUTUMN_DWARF_KEEP" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION autumn_dwarf_keep scenario=Autumn_of_Gold" "$log_path"; then
+        autumn_dwarf_keep_seen=yes
+      else
+        autumn_dwarf_keep_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
         summer_calamity_kill_seen=yes
@@ -1459,6 +1807,8 @@ main() {
     echo "reached_turn=$reached_turn"
     echo "next_turns=$WF_NEXT_END_TURNS"
     echo "next_reached_turn=$next_reached_turn"
+    echo "autumn_reached_turn=$autumn_reached_turn"
+    echo "winter_reached_turn=$winter_reached_turn"
     echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
@@ -1472,6 +1822,9 @@ main() {
     echo "summer_loyalist_camp_seen=$summer_loyalist_camp_seen"
     echo "summer_loyalist_ditch_keep_seen=$summer_loyalist_ditch_keep_seen"
     echo "summer_saurian_keep_seen=$summer_saurian_keep_seen"
+    echo "autumn_carryover_seen=$autumn_carryover_seen"
+    echo "autumn_elf_keep_seen=$autumn_elf_keep_seen"
+    echo "autumn_dwarf_keep_seen=$autumn_dwarf_keep_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
     echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
