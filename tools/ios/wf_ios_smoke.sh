@@ -34,6 +34,7 @@ WF_FORCE_SUMMER_BANDIT_RAID=${WF_FORCE_SUMMER_BANDIT_RAID:-0}
 WF_FORCE_SUMMER_ORC_RAID=${WF_FORCE_SUMMER_ORC_RAID:-0}
 WF_FORCE_SUMMER_UNDEAD_RAID=${WF_FORCE_SUMMER_UNDEAD_RAID:-0}
 WF_FORCE_SUMMER_CALAMITY_TYPE=${WF_FORCE_SUMMER_CALAMITY_TYPE:-}
+WF_FORCE_SUMMER_GRYPHON_NEST=${WF_FORCE_SUMMER_GRYPHON_NEST:-0}
 WF_FORCE_SUMMER_LOYALIST_CAMP=${WF_FORCE_SUMMER_LOYALIST_CAMP:-0}
 WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP=${WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_FORCE_SUMMER_SAURIAN_KEEP=${WF_FORCE_SUMMER_SAURIAN_KEEP:-0}
@@ -42,6 +43,7 @@ WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
 WF_WAIT_FOR_SUMMER_UNDEAD_RAID=${WF_WAIT_FOR_SUMMER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY=${WF_WAIT_FOR_SUMMER_CALAMITY:-0}
+WF_WAIT_FOR_SUMMER_GRYPHON_NEST=${WF_WAIT_FOR_SUMMER_GRYPHON_NEST:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_CAMP=${WF_WAIT_FOR_SUMMER_LOYALIST_CAMP:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP=${WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP:-0}
 WF_WAIT_FOR_SUMMER_SAURIAN_KEEP=${WF_WAIT_FOR_SUMMER_SAURIAN_KEEP:-0}
@@ -171,7 +173,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -791,6 +793,28 @@ inject_debug_overlay() {
           print "        [/then]"
           print "    [/if]"
         }
+        if (force_summer_gryphon_nest == "1" && force_summer_calamity_type == "gryphons") {
+          print "    [if]"
+          print "        [variable]"
+          print "            name=turn_number"
+          print "            numerical_equals=1"
+          print "        [/variable]"
+          print "        [then]"
+          print "            [lua]"
+          print "                code=<<"
+          print "                    local king = wesnoth.units.find_on_map { side = 8, role = \"gryphon_king\" }[1]"
+          print "                    if king then"
+          print "                        local nest_status = \"\""
+          print "                        if king.status then"
+          print "                            nest_status = tostring(king.status.nest or \"\")"
+          print "                        end"
+          print "                        wesnoth.log(\"warning\", \"WF_AUTOMATION summer_gryphon_nest scenario=" scenario_id " x=\" .. tostring(king.x or \"\") .. \" y=\" .. tostring(king.y or \"\") .. \" nest=\" .. nest_status)"
+          print "                    end"
+          print "                >>"
+          print "            [/lua]"
+          print "        [/then]"
+          print "    [/if]"
+        }
         if (force_summer_calamity_kill == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves")) {
           print "    [if]"
           print "        [and]"
@@ -1225,6 +1249,10 @@ main() {
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_calamity_state scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_calamity status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_GRYPHON_NEST" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_gryphon_nest scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_gryphon_nest status=$run_status"
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING" == "1" ]]; then
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_calamity_sighting scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_calamity_sighting status=$run_status"
@@ -1277,6 +1305,7 @@ main() {
   local summer_undead_raid_seen=""
   local summer_calamity_seen=""
   local summer_calamity_side8_units=""
+  local summer_gryphon_nest_seen=""
   local summer_calamity_sighting_seen=""
   local summer_loyalist_camp_seen=""
   local summer_loyalist_ditch_keep_seen=""
@@ -1321,6 +1350,13 @@ main() {
         summer_calamity_seen=no
       fi
       summer_calamity_side8_units=$(extract_summer_calamity_units "$log_path" "$WF_NEXT_SCENARIO")
+    fi
+    if [[ "$WF_WAIT_FOR_SUMMER_GRYPHON_NEST" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_gryphon_nest scenario=$WF_NEXT_SCENARIO" "$log_path"; then
+        summer_gryphon_nest_seen=yes
+      else
+        summer_gryphon_nest_seen=no
+      fi
     fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_calamity_sighting scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
@@ -1383,6 +1419,7 @@ main() {
     echo "summer_calamity_type=$WF_FORCE_SUMMER_CALAMITY_TYPE"
     echo "summer_calamity_seen=$summer_calamity_seen"
     echo "summer_calamity_side8_units=$summer_calamity_side8_units"
+    echo "summer_gryphon_nest_seen=$summer_gryphon_nest_seen"
     echo "summer_calamity_sighting_seen=$summer_calamity_sighting_seen"
     echo "summer_loyalist_camp_seen=$summer_loyalist_camp_seen"
     echo "summer_loyalist_ditch_keep_seen=$summer_loyalist_ditch_keep_seen"
