@@ -36,6 +36,7 @@ WF_FORCE_SUMMER_UNDEAD_RAID=${WF_FORCE_SUMMER_UNDEAD_RAID:-0}
 WF_FORCE_SUMMER_CALAMITY_TYPE=${WF_FORCE_SUMMER_CALAMITY_TYPE:-}
 WF_FORCE_SUMMER_LOYALIST_CAMP=${WF_FORCE_SUMMER_LOYALIST_CAMP:-0}
 WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP=${WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP:-0}
+WF_FORCE_SUMMER_SAURIAN_KEEP=${WF_FORCE_SUMMER_SAURIAN_KEEP:-0}
 WF_WAIT_FOR_SUMMER_OUTLAW_RAID=${WF_WAIT_FOR_SUMMER_OUTLAW_RAID:-0}
 WF_WAIT_FOR_SUMMER_BANDIT_RAID=${WF_WAIT_FOR_SUMMER_BANDIT_RAID:-0}
 WF_WAIT_FOR_SUMMER_ORC_RAID=${WF_WAIT_FOR_SUMMER_ORC_RAID:-0}
@@ -43,6 +44,7 @@ WF_WAIT_FOR_SUMMER_UNDEAD_RAID=${WF_WAIT_FOR_SUMMER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY=${WF_WAIT_FOR_SUMMER_CALAMITY:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_CAMP=${WF_WAIT_FOR_SUMMER_LOYALIST_CAMP:-0}
 WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP=${WF_WAIT_FOR_SUMMER_LOYALIST_DITCH_KEEP:-0}
+WF_WAIT_FOR_SUMMER_SAURIAN_KEEP=${WF_WAIT_FOR_SUMMER_SAURIAN_KEEP:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
@@ -169,7 +171,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -710,6 +712,85 @@ inject_debug_overlay() {
           print "        [/then]"
           print "    [/if]"
         }
+        if (force_summer_saurian_keep == "1" && force_summer_calamity_type == "saurians") {
+          print "    [if]"
+          print "        [and]"
+          print "            [variable]"
+          print "                name=turn_number"
+          print "                numerical_equals=1"
+          print "            [/variable]"
+          print "            [have_unit]"
+          print "                side=8"
+          print "                role=saurian_leader"
+          print "                canrecruit=yes"
+          print "            [/have_unit]"
+          print "        [/and]"
+          print "        [then]"
+          print "            [store_unit]"
+          print "                [filter]"
+          print "                    side=8"
+          print "                    role=saurian_leader"
+          print "                    canrecruit=yes"
+          print "                [/filter]"
+          print "                variable=wf_automation.saurian_leader"
+          print "            [/store_unit]"
+          print "            [set_variable]"
+          print "                name=wf_automation.saurian_target_x"
+          print "                value=$wf_automation.saurian_leader.goto_x"
+          print "            [/set_variable]"
+          print "            [set_variable]"
+          print "                name=wf_automation.saurian_target_y"
+          print "                value=$wf_automation.saurian_leader.goto_y"
+          print "            [/set_variable]"
+          print "            [if]"
+          print "                [have_unit]"
+          print "                    side=8"
+          print "                    role=saurian_leader"
+          print "                    canrecruit=yes"
+          print "                    x=$wf_automation.saurian_target_x"
+          print "                    y=$wf_automation.saurian_target_y"
+          print "                [/have_unit]"
+          print "                [then]"
+          print "                    [fire_event]"
+          print "                        name=side 8 turn"
+          print "                    [/fire_event]"
+          print "                [/then]"
+          print "                [else]"
+          print "                    [move_unit]"
+          print "                        side=8"
+          print "                        role=saurian_leader"
+          print "                        canrecruit=yes"
+          print "                        to_x=$wf_automation.saurian_target_x"
+          print "                        to_y=$wf_automation.saurian_target_y"
+          print "                    [/move_unit]"
+          print "                [/else]"
+          print "            [/if]"
+          print "            [fire_event]"
+          print "                name=moveto"
+          print "                [primary_unit]"
+          print "                    x,y=$wf_automation.saurian_target_x,$wf_automation.saurian_target_y"
+          print "                [/primary_unit]"
+          print "            [/fire_event]"
+          print "            [if]"
+          print "                [have_location]"
+          print "                    x=$wf_automation.saurian_target_x"
+          print "                    y=$wf_automation.saurian_target_y"
+          print "                    terrain=Khs"
+          print "                [/have_location]"
+          print "                [then]"
+          print "                    [lua]"
+          print "                        code=<<"
+          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_saurian_keep scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.saurian_target_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.saurian_target_y\"] or \"\"))"
+          print "                        >>"
+          print "                    [/lua]"
+          print "                [/then]"
+          print "            [/if]"
+          print "            [clear_variable]"
+          print "                name=wf_automation.saurian_leader,wf_automation.saurian_target_x,wf_automation.saurian_target_y"
+          print "            [/clear_variable]"
+          print "        [/then]"
+          print "    [/if]"
+        }
         if (force_summer_calamity_kill == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves")) {
           print "    [if]"
           print "        [and]"
@@ -1158,6 +1239,10 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_loyalist_ditch_keep scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_loyalist_ditch_keep status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_SAURIAN_KEEP" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_saurian_keep scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_saurian_keep status=$run_status"
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_calamity_kill status=$run_status"
@@ -1195,6 +1280,7 @@ main() {
   local summer_calamity_sighting_seen=""
   local summer_loyalist_camp_seen=""
   local summer_loyalist_ditch_keep_seen=""
+  local summer_saurian_keep_seen=""
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
@@ -1257,6 +1343,13 @@ main() {
         summer_loyalist_ditch_keep_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_SAURIAN_KEEP" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_saurian_keep scenario=$WF_NEXT_SCENARIO" "$log_path"; then
+        summer_saurian_keep_seen=yes
+      else
+        summer_saurian_keep_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
         summer_calamity_kill_seen=yes
@@ -1293,6 +1386,7 @@ main() {
     echo "summer_calamity_sighting_seen=$summer_calamity_sighting_seen"
     echo "summer_loyalist_camp_seen=$summer_loyalist_camp_seen"
     echo "summer_loyalist_ditch_keep_seen=$summer_loyalist_ditch_keep_seen"
+    echo "summer_saurian_keep_seen=$summer_saurian_keep_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
     echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
