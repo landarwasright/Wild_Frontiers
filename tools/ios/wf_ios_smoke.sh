@@ -45,6 +45,7 @@ WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_KILL=${WF_WAIT_FOR_SUMMER_CALAMITY_KILL:-0}
+WF_WAIT_FOR_SUMMER_CALAMITY_AFTERMATH=${WF_WAIT_FOR_SUMMER_CALAMITY_AFTERMATH:-0}
 WF_TRACE=${WF_TRACE:-0}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
@@ -290,6 +291,54 @@ inject_debug_overlay() {
             print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_sighting scenario=" scenario_id " type=loyalists event=calamity_loyalists_sighted\")"
             print "        >>"
             print "    [/lua]"
+            print "[/event]"
+          }
+          if (force_summer_calamity_kill == "1" && (force_summer_calamity_type == "lich" || force_summer_calamity_type == "orcs" || force_summer_calamity_type == "drakes" || force_summer_calamity_type == "dwarves")) {
+            print ""
+            print "[event]"
+            print "    name=die"
+            print "    first_time_only=no"
+            print "    [filter]"
+            print "        side=8"
+            if (force_summer_calamity_type == "lich") {
+              print "        role=lich"
+            }
+            if (force_summer_calamity_type == "orcs") {
+              print "        role=orc_calamity_leader"
+            }
+            if (force_summer_calamity_type == "drakes") {
+              print "        role=drake_leader"
+            }
+            if (force_summer_calamity_type == "dwarves") {
+              print "        role=dwarf_calamity_leader"
+            }
+            print "    [/filter]"
+            print "    [filter_second]"
+            print "        side=1"
+            print "    [/filter_second]"
+            print "    [store_gold]"
+            print "        side=1"
+            print "        variable=wf_automation.aftermath_gold"
+            print "    [/store_gold]"
+            print "    [lua]"
+            print "        code=<<"
+            if (force_summer_calamity_type == "lich") {
+              print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_aftermath scenario=" scenario_id " type=lich side1_gold=\" .. tostring(wml.variables[\"wf_automation.aftermath_gold\"] or \"\"))"
+            }
+            if (force_summer_calamity_type == "orcs") {
+              print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_aftermath scenario=" scenario_id " type=orcs side1_gold=\" .. tostring(wml.variables[\"wf_automation.aftermath_gold\"] or \"\"))"
+            }
+            if (force_summer_calamity_type == "drakes") {
+              print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_aftermath scenario=" scenario_id " type=drakes side1_gold=\" .. tostring(wml.variables[\"wf_automation.aftermath_gold\"] or \"\"))"
+            }
+            if (force_summer_calamity_type == "dwarves") {
+              print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_calamity_aftermath scenario=" scenario_id " type=dwarves side1_gold=\" .. tostring(wml.variables[\"wf_automation.aftermath_gold\"] or \"\"))"
+            }
+            print "        >>"
+            print "    [/lua]"
+            print "    [clear_variable]"
+            print "        name=wf_automation.aftermath_gold"
+            print "    [/clear_variable]"
             print "[/event]"
           }
         }
@@ -909,6 +958,16 @@ extract_summer_calamity_units() {
     | tail -n 1
 }
 
+extract_summer_calamity_aftermath_gold() {
+  local log_path=$1
+  local scenario_id=$2
+  local calamity_type=$3
+
+  rg -o "WF_AUTOMATION summer_calamity_aftermath scenario=${scenario_id} type=${calamity_type} side1_gold=[0-9]+" "$log_path" 2>/dev/null \
+    | sed 's/.*side1_gold=//' \
+    | tail -n 1
+}
+
 capture_turn_number() {
   local name=$1
   capture_and_ocr "$name"
@@ -1066,6 +1125,10 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "next_scenario_calamity_kill status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_AFTERMATH" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_calamity_aftermath scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "next_scenario_calamity_aftermath status=$run_status"
+    fi
     if (( WF_NEXT_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_NEXT_END_TURNS" "$WF_NEXT_SCENARIO" "${WF_NEXT_SCENARIO}-turn" || run_status=$?
       note_progress "next_scenario_complete status=$run_status"
@@ -1095,6 +1158,8 @@ main() {
   local summer_calamity_sighting_seen=""
   local summer_loyalist_camp_seen=""
   local summer_calamity_kill_seen=""
+  local summer_calamity_aftermath_seen=""
+  local summer_calamity_aftermath_side1_gold=""
   if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
@@ -1154,6 +1219,14 @@ main() {
         summer_calamity_kill_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_AFTERMATH" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_calamity_aftermath scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
+        summer_calamity_aftermath_seen=yes
+      else
+        summer_calamity_aftermath_seen=no
+      fi
+      summer_calamity_aftermath_side1_gold=$(extract_summer_calamity_aftermath_gold "$log_path" "$WF_NEXT_SCENARIO" "$WF_FORCE_SUMMER_CALAMITY_TYPE")
+    fi
   fi
 
   {
@@ -1175,6 +1248,8 @@ main() {
     echo "summer_calamity_sighting_seen=$summer_calamity_sighting_seen"
     echo "summer_loyalist_camp_seen=$summer_loyalist_camp_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
+    echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
+    echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
     echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
   note_progress "summary_written status=$run_status"
