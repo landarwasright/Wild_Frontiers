@@ -30,6 +30,7 @@ WF_CHAIN_SCENARIO_4=${WF_CHAIN_SCENARIO_4:-}
 WF_CHAIN_SCENARIO_5=${WF_CHAIN_SCENARIO_5:-}
 WF_CHAIN_SCENARIO_6=${WF_CHAIN_SCENARIO_6:-}
 WF_CHAIN_SCENARIO_7=${WF_CHAIN_SCENARIO_7:-}
+WF_CHAIN_SCENARIO_8=${WF_CHAIN_SCENARIO_8:-}
 WF_NEXT_END_TURNS=${WF_NEXT_END_TURNS:-0}
 WF_CHAIN_5_END_TURNS=${WF_CHAIN_5_END_TURNS:-0}
 WF_CHAIN_6_END_TURNS=${WF_CHAIN_6_END_TURNS:-0}
@@ -86,6 +87,7 @@ WF_WAIT_FOR_SECOND_WINTER_ELF_RAID=${WF_WAIT_FOR_SECOND_WINTER_ELF_RAID:-0}
 WF_WAIT_FOR_SECOND_WINTER_DWARF_RAID=${WF_WAIT_FOR_SECOND_WINTER_DWARF_RAID:-0}
 WF_WAIT_FOR_SECOND_WINTER_RUIN_CASTLE=${WF_WAIT_FOR_SECOND_WINTER_RUIN_CASTLE:-0}
 WF_WAIT_FOR_SPRING_STATE=${WF_WAIT_FOR_SPRING_STATE:-0}
+WF_WAIT_FOR_SECOND_SPRING_STATE=${WF_WAIT_FOR_SECOND_SPRING_STATE:-0}
 WF_WAIT_FOR_SPRING_ORC_RAID=${WF_WAIT_FOR_SPRING_ORC_RAID:-0}
 WF_WAIT_FOR_SPRING_UNDEAD_RAID=${WF_WAIT_FOR_SPRING_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SPRING_DROWNING=${WF_WAIT_FOR_SPRING_DROWNING:-0}
@@ -2144,6 +2146,10 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_ruin_castle scenario=$WF_CHAIN_SCENARIO_7 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "second_winter_ruin_castle status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_STATE" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_state scenario=$WF_CHAIN_SCENARIO_8 year=2" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_spring_state status=$run_status"
+    fi
     if (( WF_CHAIN_7_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_CHAIN_7_END_TURNS" "$WF_CHAIN_SCENARIO_7" "${WF_CHAIN_SCENARIO_7}-cycle2-turn" || run_status=$?
       note_progress "chain_scenario_7_complete status=$run_status"
@@ -2170,6 +2176,7 @@ main() {
   local chain_5_reached_turn=""
   local chain_6_reached_turn=""
   local chain_7_reached_turn=""
+  local chain_8_reached_turn=""
   local summer_outlaw_raid_seen=""
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
@@ -2197,6 +2204,7 @@ main() {
   local second_winter_dwarf_raid_seen=""
   local second_winter_ruin_castle_seen=""
   local spring_state_seen=""
+  local second_spring_state_seen=""
   local spring_orc_raid_seen=""
   local spring_undead_raid_seen=""
   local spring_drowning_seen=""
@@ -2223,6 +2231,9 @@ main() {
     fi
     if [[ -n "$WF_CHAIN_SCENARIO_7" ]]; then
       chain_7_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_7")
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_8" ]]; then
+      chain_8_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_8")
     fi
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
@@ -2407,6 +2418,13 @@ main() {
         spring_state_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_STATE" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_state scenario=$WF_CHAIN_SCENARIO_8 year=2" "$log_path"; then
+        second_spring_state_seen=yes
+      else
+        second_spring_state_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SPRING_ORC_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION spring_orc_raid scenario=$WF_CHAIN_SCENARIO_4" "$log_path"; then
         spring_orc_raid_seen=yes
@@ -2467,6 +2485,7 @@ main() {
     echo "chain_5_reached_turn=$chain_5_reached_turn"
     echo "chain_6_reached_turn=$chain_6_reached_turn"
     echo "chain_7_reached_turn=$chain_7_reached_turn"
+    echo "chain_8_reached_turn=$chain_8_reached_turn"
     echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
@@ -2495,6 +2514,7 @@ main() {
     echo "second_winter_dwarf_raid_seen=$second_winter_dwarf_raid_seen"
     echo "second_winter_ruin_castle_seen=$second_winter_ruin_castle_seen"
     echo "spring_state_seen=$spring_state_seen"
+    echo "second_spring_state_seen=$second_spring_state_seen"
     echo "spring_orc_raid_seen=$spring_orc_raid_seen"
     echo "spring_undead_raid_seen=$spring_undead_raid_seen"
     echo "spring_drowning_seen=$spring_drowning_seen"
