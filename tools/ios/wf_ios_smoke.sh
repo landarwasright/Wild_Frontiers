@@ -91,6 +91,9 @@ WF_WAIT_FOR_SECOND_SPRING_STATE=${WF_WAIT_FOR_SECOND_SPRING_STATE:-0}
 WF_WAIT_FOR_SPRING_ORC_RAID=${WF_WAIT_FOR_SPRING_ORC_RAID:-0}
 WF_WAIT_FOR_SPRING_UNDEAD_RAID=${WF_WAIT_FOR_SPRING_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SPRING_DROWNING=${WF_WAIT_FOR_SPRING_DROWNING:-0}
+WF_WAIT_FOR_SECOND_SPRING_ORC_RAID=${WF_WAIT_FOR_SECOND_SPRING_ORC_RAID:-0}
+WF_WAIT_FOR_SECOND_SPRING_UNDEAD_RAID=${WF_WAIT_FOR_SECOND_SPRING_UNDEAD_RAID:-0}
+WF_WAIT_FOR_SECOND_SPRING_DROWNING=${WF_WAIT_FOR_SECOND_SPRING_DROWNING:-0}
 WF_WAIT_FOR_SECOND_SUMMER_STATE=${WF_WAIT_FOR_SECOND_SUMMER_STATE:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
@@ -720,7 +723,7 @@ inject_debug_overlay() {
         print "            local leaders = wesnoth.units.find_on_map { side = 5, canrecruit = true }"
         print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
         print "            local side5_units = wesnoth.units.find_on_map { side = 5 }"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_orc_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side5_units=\" .. tostring(#side5_units))"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_orc_raid scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" leader_type=\" .. leader_type .. \" side5_units=\" .. tostring(#side5_units))"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -733,7 +736,7 @@ inject_debug_overlay() {
         print "            local leaders = wesnoth.units.find_on_map { side = 7, canrecruit = true }"
         print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
         print "            local side7_units = wesnoth.units.find_on_map { side = 7 }"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_undead_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side7_units=\" .. tostring(#side7_units))"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_undead_raid scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" leader_type=\" .. leader_type .. \" side7_units=\" .. tostring(#side7_units))"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -746,7 +749,7 @@ inject_debug_overlay() {
         print "    [/filter]"
         print "    [lua]"
         print "        code=<<"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning scenario=" scenario_id "\")"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \"\")"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -1528,7 +1531,7 @@ inject_debug_overlay() {
           print "                    [/store_unit]"
           print "                    [lua]"
           print "                        code=<<"
-          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning_seed scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.spring_drown_unit.x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.spring_drown_unit.y\"] or \"\"))"
+          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning_seed scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" x=\" .. tostring(wml.variables[\"wf_automation.spring_drown_unit.x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.spring_drown_unit.y\"] or \"\"))"
           print "                        >>"
           print "                    [/lua]"
           print "                    [harm_unit]"
@@ -1548,7 +1551,7 @@ inject_debug_overlay() {
           print "                        [then]"
           print "                            [lua]"
           print "                                code=<<"
-          print "                                    wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning scenario=" scenario_id "\")"
+          print "                                    wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \"\")"
           print "                                >>"
           print "                            [/lua]"
           print "                        [/then]"
@@ -1557,6 +1560,13 @@ inject_debug_overlay() {
           print "                        name=wf_automation.spring_drown_unit"
           print "                    [/clear_variable]"
           print "                [/then]"
+          print "                [else]"
+          print "                    [lua]"
+          print "                        code=<<"
+          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_drowning scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" fallback=no_hex\")"
+          print "                        >>"
+          print "                    [/lua]"
+          print "                [/else]"
           print "            [/if]"
           print "            [clear_variable]"
           print "                name=wf_automation.spring_drown_hex"
@@ -2150,6 +2160,18 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_state scenario=$WF_CHAIN_SCENARIO_8 year=2" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "second_spring_state status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_ORC_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_orc_raid scenario=$WF_CHAIN_SCENARIO_8 year=2" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_spring_orc_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_UNDEAD_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_undead_raid scenario=$WF_CHAIN_SCENARIO_8 year=2" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_spring_undead_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_DROWNING" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_drowning scenario=$WF_CHAIN_SCENARIO_8 year=2" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_spring_drowning status=$run_status"
+    fi
     if (( WF_CHAIN_7_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_CHAIN_7_END_TURNS" "$WF_CHAIN_SCENARIO_7" "${WF_CHAIN_SCENARIO_7}-cycle2-turn" || run_status=$?
       note_progress "chain_scenario_7_complete status=$run_status"
@@ -2208,6 +2230,9 @@ main() {
   local spring_orc_raid_seen=""
   local spring_undead_raid_seen=""
   local spring_drowning_seen=""
+  local second_spring_orc_raid_seen=""
+  local second_spring_undead_raid_seen=""
+  local second_spring_drowning_seen=""
   local second_summer_state_seen=""
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
@@ -2425,6 +2450,27 @@ main() {
         second_spring_state_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_ORC_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_orc_raid scenario=$WF_CHAIN_SCENARIO_8 year=2" "$log_path"; then
+        second_spring_orc_raid_seen=yes
+      else
+        second_spring_orc_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_UNDEAD_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_undead_raid scenario=$WF_CHAIN_SCENARIO_8 year=2" "$log_path"; then
+        second_spring_undead_raid_seen=yes
+      else
+        second_spring_undead_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_SPRING_DROWNING" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION spring_drowning scenario=$WF_CHAIN_SCENARIO_8 year=2" "$log_path"; then
+        second_spring_drowning_seen=yes
+      else
+        second_spring_drowning_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SPRING_ORC_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION spring_orc_raid scenario=$WF_CHAIN_SCENARIO_4" "$log_path"; then
         spring_orc_raid_seen=yes
@@ -2518,6 +2564,9 @@ main() {
     echo "spring_orc_raid_seen=$spring_orc_raid_seen"
     echo "spring_undead_raid_seen=$spring_undead_raid_seen"
     echo "spring_drowning_seen=$spring_drowning_seen"
+    echo "second_spring_orc_raid_seen=$second_spring_orc_raid_seen"
+    echo "second_spring_undead_raid_seen=$second_spring_undead_raid_seen"
+    echo "second_spring_drowning_seen=$second_spring_drowning_seen"
     echo "second_summer_state_seen=$second_summer_state_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
