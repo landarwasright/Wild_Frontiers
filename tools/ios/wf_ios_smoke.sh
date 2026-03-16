@@ -28,13 +28,16 @@ WF_CHAIN_SCENARIO_2=${WF_CHAIN_SCENARIO_2:-}
 WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
 WF_CHAIN_SCENARIO_4=${WF_CHAIN_SCENARIO_4:-}
 WF_CHAIN_SCENARIO_5=${WF_CHAIN_SCENARIO_5:-}
+WF_CHAIN_SCENARIO_6=${WF_CHAIN_SCENARIO_6:-}
 WF_NEXT_END_TURNS=${WF_NEXT_END_TURNS:-0}
 WF_CHAIN_5_END_TURNS=${WF_CHAIN_5_END_TURNS:-0}
+WF_CHAIN_6_END_TURNS=${WF_CHAIN_6_END_TURNS:-0}
 WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
 WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
 WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
 WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
 WF_FORCE_SUMMER_END=${WF_FORCE_SUMMER_END:-0}
+WF_FORCE_SECOND_SUMMER_END_TURN=${WF_FORCE_SECOND_SUMMER_END_TURN:-0}
 WF_FORCE_AUTUMN_END=${WF_FORCE_AUTUMN_END:-0}
 WF_FORCE_WINTER_END=${WF_FORCE_WINTER_END:-0}
 WF_FORCE_SPRING_END=${WF_FORCE_SPRING_END:-0}
@@ -69,6 +72,7 @@ WF_WAIT_FOR_SUMMER_SAURIAN_KEEP=${WF_WAIT_FOR_SUMMER_SAURIAN_KEEP:-0}
 WF_WAIT_FOR_AUTUMN_CARRYOVER=${WF_WAIT_FOR_AUTUMN_CARRYOVER:-0}
 WF_WAIT_FOR_AUTUMN_ELF_KEEP=${WF_WAIT_FOR_AUTUMN_ELF_KEEP:-0}
 WF_WAIT_FOR_AUTUMN_DWARF_KEEP=${WF_WAIT_FOR_AUTUMN_DWARF_KEEP:-0}
+WF_WAIT_FOR_SECOND_AUTUMN_CARRYOVER=${WF_WAIT_FOR_SECOND_AUTUMN_CARRYOVER:-0}
 WF_WAIT_FOR_WINTER_STATE=${WF_WAIT_FOR_WINTER_STATE:-0}
 WF_WAIT_FOR_WINTER_UNDEAD_RAID=${WF_WAIT_FOR_WINTER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_WINTER_ELF_RAID=${WF_WAIT_FOR_WINTER_ELF_RAID:-0}
@@ -205,7 +209,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_winter_end="$WF_FORCE_WINTER_END" -v force_spring_end="$WF_FORCE_SPRING_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_winter_undead_raid="$WF_FORCE_WINTER_UNDEAD_RAID" -v force_winter_elf_raid="$WF_FORCE_WINTER_ELF_RAID" -v force_winter_dwarf_raid="$WF_FORCE_WINTER_DWARF_RAID" -v force_winter_ruin_castle="$WF_FORCE_WINTER_RUIN_CASTLE" -v force_spring_orc_raid="$WF_FORCE_SPRING_ORC_RAID" -v force_spring_undead_raid="$WF_FORCE_SPRING_UNDEAD_RAID" -v force_spring_drowning="$WF_FORCE_SPRING_DROWNING" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_second_summer_end_turn="$WF_FORCE_SECOND_SUMMER_END_TURN" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_winter_end="$WF_FORCE_WINTER_END" -v force_spring_end="$WF_FORCE_SPRING_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_winter_undead_raid="$WF_FORCE_WINTER_UNDEAD_RAID" -v force_winter_elf_raid="$WF_FORCE_WINTER_ELF_RAID" -v force_winter_dwarf_raid="$WF_FORCE_WINTER_DWARF_RAID" -v force_winter_ruin_castle="$WF_FORCE_WINTER_RUIN_CASTLE" -v force_spring_orc_raid="$WF_FORCE_SPRING_ORC_RAID" -v force_spring_undead_raid="$WF_FORCE_SPRING_UNDEAD_RAID" -v force_spring_drowning="$WF_FORCE_SPRING_DROWNING" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -1316,7 +1320,7 @@ inject_debug_overlay() {
         print "                    end"
         print "                end"
         print "                local lich_present = wesnoth.units.find_on_map { side = 8, role = \"lich\" }[1] and \"yes\" or \"no\""
-        print "                wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_carryover scenario=" scenario_id " side8_units=\" .. tostring(#units) .. \" nest_units=\" .. tostring(nest_units) .. \" lich_present=\" .. lich_present)"
+        print "                wesnoth.log(\"warning\", \"WF_AUTOMATION autumn_carryover scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" side8_units=\" .. tostring(#units) .. \" nest_units=\" .. tostring(nest_units) .. \" lich_present=\" .. lich_present)"
         print "            end"
         print "        >>"
         print "    [/lua]"
@@ -1578,8 +1582,31 @@ inject_debug_overlay() {
         print "            [/fire_event]"
         print "        [/then]"
         print "        [else]"
-        print "            [end_turn]"
-        print "            [/end_turn]"
+        if (force_second_summer_end_turn != "0") {
+          print "            [if]"
+          print "                [variable]"
+          print "                    name=turn_number"
+          print "                    greater_than_equal_to=" force_second_summer_end_turn
+          print "                [/variable]"
+          print "                [then]"
+          print "                    [lua]"
+          print "                        code=<<"
+          print "                            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_second_summer_end scenario=" scenario_id " turn=\" .. tostring(wml.variables[\"turn_number\"]))"
+          print "                        >>"
+          print "                    [/lua]"
+          print "                    [fire_event]"
+          print "                        name=wf_time_over"
+          print "                    [/fire_event]"
+          print "                [/then]"
+          print "                [else]"
+          print "                    [end_turn]"
+          print "                    [/end_turn]"
+          print "                [/else]"
+          print "            [/if]"
+        } else {
+          print "            [end_turn]"
+          print "            [/end_turn]"
+        }
         print "        [/else]"
         print "    [/if]"
       } else if (scenario_id == "Autumn_of_Gold" && force_autumn_end == "1") {
@@ -2082,6 +2109,14 @@ main() {
       advance_turns "$log_path" "$WF_CHAIN_5_END_TURNS" "$WF_CHAIN_SCENARIO_5" "${WF_CHAIN_SCENARIO_5}-cycle2-turn" || run_status=$?
       note_progress "chain_scenario_5_complete status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_AUTUMN_CARRYOVER" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION autumn_carryover scenario=$WF_CHAIN_SCENARIO_6 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_autumn_carryover status=$run_status"
+    fi
+    if (( WF_CHAIN_6_END_TURNS > 0 )); then
+      advance_turns "$log_path" "$WF_CHAIN_6_END_TURNS" "$WF_CHAIN_SCENARIO_6" "${WF_CHAIN_SCENARIO_6}-cycle2-turn" || run_status=$?
+      note_progress "chain_scenario_6_complete status=$run_status"
+    fi
   fi
 
   local after_log
@@ -2102,6 +2137,7 @@ main() {
   local winter_reached_turn=""
   local spring_reached_turn=""
   local chain_5_reached_turn=""
+  local chain_6_reached_turn=""
   local summer_outlaw_raid_seen=""
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
@@ -2115,6 +2151,7 @@ main() {
   local summer_loyalist_ditch_keep_seen=""
   local summer_saurian_keep_seen=""
   local autumn_carryover_seen=""
+  local second_autumn_carryover_seen=""
   local autumn_elf_keep_seen=""
   local autumn_dwarf_keep_seen=""
   local winter_state_seen=""
@@ -2143,6 +2180,9 @@ main() {
     fi
     if [[ -n "$WF_CHAIN_SCENARIO_5" ]]; then
       chain_5_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_5")
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_6" ]]; then
+      chain_6_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_6")
     fi
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
@@ -2227,6 +2267,13 @@ main() {
         autumn_carryover_seen=yes
       else
         autumn_carryover_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_AUTUMN_CARRYOVER" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION autumn_carryover scenario=$WF_CHAIN_SCENARIO_6 year=1" "$log_path"; then
+        second_autumn_carryover_seen=yes
+      else
+        second_autumn_carryover_seen=no
       fi
     fi
     if [[ "$WF_WAIT_FOR_AUTUMN_ELF_KEEP" == "1" ]]; then
@@ -2343,6 +2390,7 @@ main() {
     echo "winter_reached_turn=$winter_reached_turn"
     echo "spring_reached_turn=$spring_reached_turn"
     echo "chain_5_reached_turn=$chain_5_reached_turn"
+    echo "chain_6_reached_turn=$chain_6_reached_turn"
     echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
@@ -2357,6 +2405,7 @@ main() {
     echo "summer_loyalist_ditch_keep_seen=$summer_loyalist_ditch_keep_seen"
     echo "summer_saurian_keep_seen=$summer_saurian_keep_seen"
     echo "autumn_carryover_seen=$autumn_carryover_seen"
+    echo "second_autumn_carryover_seen=$second_autumn_carryover_seen"
     echo "autumn_elf_keep_seen=$autumn_elf_keep_seen"
     echo "autumn_dwarf_keep_seen=$autumn_dwarf_keep_seen"
     echo "winter_state_seen=$winter_state_seen"
