@@ -24,6 +24,11 @@ WF_NOCACHE=${WF_NOCACHE:-1}
 WF_ADVANCE_TIMEOUT=${WF_ADVANCE_TIMEOUT:-0}
 WF_START_SCENARIO=${WF_START_SCENARIO:-A_New_Beginning}
 WF_NEXT_SCENARIO=${WF_NEXT_SCENARIO:-Summer_of_Dreams}
+WF_LOAD_SAVE=${WF_LOAD_SAVE:-}
+WF_LOAD_SCENARIO=${WF_LOAD_SCENARIO:-}
+WF_LOAD_WAIT_PATTERN=${WF_LOAD_WAIT_PATTERN:-}
+WF_LOAD_STORY_MAX_PAGES=${WF_LOAD_STORY_MAX_PAGES:-12}
+WF_LOAD_END_TURNS=${WF_LOAD_END_TURNS:-0}
 WF_CHAIN_SCENARIO_2=${WF_CHAIN_SCENARIO_2:-}
 WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
 WF_CHAIN_SCENARIO_4=${WF_CHAIN_SCENARIO_4:-}
@@ -169,6 +174,32 @@ capture_and_ocr() {
 note_progress() {
   local message=$1
   printf '%s %s\n' "$(date +"%H:%M:%S")" "$message" >> "$ARTIFACT_DIR/progress.log"
+}
+
+advance_story_screens() {
+  local max_pages=${1:-12}
+  local story_name="story-scan"
+  local i=0
+
+  while (( i < max_pages )); do
+    capture_and_ocr "$story_name"
+    if ! rg -Fqi "Skip" "$ARTIFACT_DIR/$story_name.txt"; then
+      return 0
+    fi
+    send_key tab
+    sleep 1
+    send_key return
+    sleep 2
+    i=$((i + 1))
+  done
+
+  capture_and_ocr "$story_name"
+  if rg -Fqi "Skip" "$ARTIFACT_DIR/$story_name.txt"; then
+    echo "Timed out clearing story screens" >&2
+    return 1
+  fi
+
+  return 0
 }
 
 wait_for_text() {
@@ -1839,7 +1870,7 @@ extract_log_turn() {
   rg -o "WF_AUTOMATION side1_turn_refresh scenario=${scenario_id} turn=[0-9]+" "$log_path" 2>/dev/null \
     | sed 's/.*=//' \
     | sort -n \
-    | tail -n 1
+    | tail -n 1 || true
 }
 
 extract_turn_number() {
@@ -1866,7 +1897,7 @@ extract_summer_calamity_units() {
 
   rg -o "WF_AUTOMATION summer_calamity_state scenario=${scenario_id} type=[^ ]+ side8_units=[0-9]+" "$log_path" 2>/dev/null \
     | sed 's/.*side8_units=//' \
-    | tail -n 1
+    | tail -n 1 || true
 }
 
 extract_summer_calamity_aftermath_gold() {
@@ -1876,7 +1907,7 @@ extract_summer_calamity_aftermath_gold() {
 
   rg -o "WF_AUTOMATION summer_calamity_aftermath scenario=${scenario_id} type=${calamity_type} side1_gold=[0-9]+" "$log_path" 2>/dev/null \
     | sed 's/.*side1_gold=//' \
-    | tail -n 1
+    | tail -n 1 || true
 }
 
 capture_turn_number() {
@@ -1960,7 +1991,11 @@ main() {
   before_log=$(latest_log "$container")
 
   local -a launch_args
-  launch_args=(--strict-lua --campaign="$WF_ADDON_NAME" --campaign-difficulty="$WF_DIFFICULTY" --campaign-skip-story)
+  if [[ -n "$WF_LOAD_SAVE" ]]; then
+    launch_args=(--strict-lua --load="$WF_LOAD_SAVE")
+  else
+    launch_args=(--strict-lua --campaign="$WF_ADDON_NAME" --campaign-difficulty="$WF_DIFFICULTY" --campaign-skip-story)
+  fi
   if [[ "$WF_NOCACHE" == "1" ]]; then
     launch_args=(--nocache "${launch_args[@]}")
   fi
@@ -1976,26 +2011,43 @@ main() {
   note_progress "log_detected $run_log_name"
 
   sleep "$WF_LAUNCH_DELAY"
-  wait_for_text "Which type would you like to use?" "economy-dialog" 180
-
-  send_key return
-  wait_for_text "Nevermind" "bonus-dialog" 90
-
-  send_key down "$WF_BONUS_DOWN_COUNT"
-  send_key return
-  send_key return
-  wait_until_clear "post-start" 120 \
-    "Which type would you like to use?" \
-    "Nevermind" \
-    "Starting game..." \
-    "Reading files and creating cache..."
-  note_progress "startup_complete"
 
   local run_status=0
-  advance_turns "$log_path" "$WF_END_TURNS" "$WF_START_SCENARIO" "turn" || run_status=$?
-  note_progress "start_scenario_complete status=$run_status"
+  if [[ -n "$WF_LOAD_SAVE" ]]; then
+    advance_story_screens "$WF_LOAD_STORY_MAX_PAGES" || run_status=$?
+    note_progress "load_story_complete status=$run_status"
+    if [[ -n "$WF_LOAD_WAIT_PATTERN" ]]; then
+      wait_for_log_text_with_return "$log_path" "$WF_LOAD_WAIT_PATTERN" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "load_pattern status=$run_status"
+    fi
+    if (( WF_LOAD_END_TURNS > 0 )); then
+      advance_turns "$log_path" "$WF_LOAD_END_TURNS" "$WF_LOAD_SCENARIO" "${WF_LOAD_SCENARIO}-load-turn" || run_status=$?
+      note_progress "load_scenario_complete status=$run_status"
+    fi
+    note_progress "startup_complete"
+  else
+    wait_for_text "Which type would you like to use?" "economy-dialog" 180
 
-  if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
+    send_key return
+    wait_for_text "Nevermind" "bonus-dialog" 90
+
+    send_key down "$WF_BONUS_DOWN_COUNT"
+    send_key return
+    send_key return
+    wait_until_clear "post-start" 120 \
+      "Which type would you like to use?" \
+      "Nevermind" \
+      "Starting game..." \
+      "Reading files and creating cache..."
+    note_progress "startup_complete"
+
+    advance_turns "$log_path" "$WF_END_TURNS" "$WF_START_SCENARIO" "turn" || run_status=$?
+    note_progress "start_scenario_complete status=$run_status"
+  fi
+
+  if [[ -n "$WF_LOAD_SAVE" ]]; then
+    :
+  elif [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     wait_for_scenario_entry "$log_path" "$WF_START_SCENARIO" "$WF_NEXT_SCENARIO" "next_scenario" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       wait_for_log_text "$log_path" "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
@@ -2197,6 +2249,8 @@ main() {
   if [[ -z "$reached_turn" && -f "$ARTIFACT_DIR/turn-scan.txt" ]]; then
     reached_turn=$(extract_turn_number "$ARTIFACT_DIR/turn-scan.txt")
   fi
+  local load_reached_turn=""
+  local load_pattern_seen=""
   local next_reached_turn=""
   local autumn_reached_turn=""
   local winter_reached_turn=""
@@ -2245,7 +2299,18 @@ main() {
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
-  if [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
+  if [[ -n "$WF_LOAD_SAVE" ]]; then
+    if [[ -n "$WF_LOAD_SCENARIO" ]]; then
+      load_reached_turn=$(extract_log_turn "$log_path" "$WF_LOAD_SCENARIO")
+    fi
+    if [[ -n "$WF_LOAD_WAIT_PATTERN" ]]; then
+      if rg -Fq "$WF_LOAD_WAIT_PATTERN" "$log_path"; then
+        load_pattern_seen=yes
+      else
+        load_pattern_seen=no
+      fi
+    fi
+  elif [[ "$WF_WAIT_FOR_SCENARIO_END" == "1" ]]; then
     next_reached_turn=$(extract_log_turn "$log_path" "$WF_NEXT_SCENARIO")
     if [[ -n "$WF_CHAIN_SCENARIO_2" ]]; then
       autumn_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_2")
@@ -2541,6 +2606,9 @@ main() {
     echo "after_log=$after_log"
     echo "turns=$WF_END_TURNS"
     echo "reached_turn=$reached_turn"
+    echo "load_save=$WF_LOAD_SAVE"
+    echo "load_reached_turn=$load_reached_turn"
+    echo "load_pattern_seen=$load_pattern_seen"
     echo "next_turns=$WF_NEXT_END_TURNS"
     echo "next_reached_turn=$next_reached_turn"
     echo "autumn_reached_turn=$autumn_reached_turn"
