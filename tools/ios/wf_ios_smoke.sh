@@ -29,9 +29,11 @@ WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
 WF_CHAIN_SCENARIO_4=${WF_CHAIN_SCENARIO_4:-}
 WF_CHAIN_SCENARIO_5=${WF_CHAIN_SCENARIO_5:-}
 WF_CHAIN_SCENARIO_6=${WF_CHAIN_SCENARIO_6:-}
+WF_CHAIN_SCENARIO_7=${WF_CHAIN_SCENARIO_7:-}
 WF_NEXT_END_TURNS=${WF_NEXT_END_TURNS:-0}
 WF_CHAIN_5_END_TURNS=${WF_CHAIN_5_END_TURNS:-0}
 WF_CHAIN_6_END_TURNS=${WF_CHAIN_6_END_TURNS:-0}
+WF_CHAIN_7_END_TURNS=${WF_CHAIN_7_END_TURNS:-0}
 WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
 WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
 WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
@@ -74,6 +76,7 @@ WF_WAIT_FOR_AUTUMN_ELF_KEEP=${WF_WAIT_FOR_AUTUMN_ELF_KEEP:-0}
 WF_WAIT_FOR_AUTUMN_DWARF_KEEP=${WF_WAIT_FOR_AUTUMN_DWARF_KEEP:-0}
 WF_WAIT_FOR_SECOND_AUTUMN_CARRYOVER=${WF_WAIT_FOR_SECOND_AUTUMN_CARRYOVER:-0}
 WF_WAIT_FOR_WINTER_STATE=${WF_WAIT_FOR_WINTER_STATE:-0}
+WF_WAIT_FOR_SECOND_WINTER_STATE=${WF_WAIT_FOR_SECOND_WINTER_STATE:-0}
 WF_WAIT_FOR_WINTER_UNDEAD_RAID=${WF_WAIT_FOR_WINTER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_WINTER_ELF_RAID=${WF_WAIT_FOR_WINTER_ELF_RAID:-0}
 WF_WAIT_FOR_WINTER_DWARF_RAID=${WF_WAIT_FOR_WINTER_DWARF_RAID:-0}
@@ -626,7 +629,7 @@ inject_debug_overlay() {
         print "        code=<<"
         print "            local wolves = wesnoth.units.find_on_map { side = 2, type = \"Wolf\" }"
         print "            local rats = wesnoth.units.find_on_map { side = 2, type = \"Giant Rat\" }"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_state scenario=" scenario_id " wolves=\" .. tostring(#wolves) .. \" rats=\" .. tostring(#rats))"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_state scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" wolves=\" .. tostring(#wolves) .. \" rats=\" .. tostring(#rats))"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -2117,6 +2120,14 @@ main() {
       advance_turns "$log_path" "$WF_CHAIN_6_END_TURNS" "$WF_CHAIN_SCENARIO_6" "${WF_CHAIN_SCENARIO_6}-cycle2-turn" || run_status=$?
       note_progress "chain_scenario_6_complete status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_STATE" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_state scenario=$WF_CHAIN_SCENARIO_7 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_winter_state status=$run_status"
+    fi
+    if (( WF_CHAIN_7_END_TURNS > 0 )); then
+      advance_turns "$log_path" "$WF_CHAIN_7_END_TURNS" "$WF_CHAIN_SCENARIO_7" "${WF_CHAIN_SCENARIO_7}-cycle2-turn" || run_status=$?
+      note_progress "chain_scenario_7_complete status=$run_status"
+    fi
   fi
 
   local after_log
@@ -2138,6 +2149,7 @@ main() {
   local spring_reached_turn=""
   local chain_5_reached_turn=""
   local chain_6_reached_turn=""
+  local chain_7_reached_turn=""
   local summer_outlaw_raid_seen=""
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
@@ -2155,6 +2167,7 @@ main() {
   local autumn_elf_keep_seen=""
   local autumn_dwarf_keep_seen=""
   local winter_state_seen=""
+  local second_winter_state_seen=""
   local winter_undead_raid_seen=""
   local winter_elf_raid_seen=""
   local winter_dwarf_raid_seen=""
@@ -2183,6 +2196,9 @@ main() {
     fi
     if [[ -n "$WF_CHAIN_SCENARIO_6" ]]; then
       chain_6_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_6")
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_7" ]]; then
+      chain_7_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_7")
     fi
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
@@ -2297,6 +2313,13 @@ main() {
         winter_state_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_STATE" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_state scenario=$WF_CHAIN_SCENARIO_7 year=1" "$log_path"; then
+        second_winter_state_seen=yes
+      else
+        second_winter_state_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_WINTER_UNDEAD_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION winter_undead_raid scenario=Winter_of_Storms" "$log_path"; then
         winter_undead_raid_seen=yes
@@ -2391,6 +2414,7 @@ main() {
     echo "spring_reached_turn=$spring_reached_turn"
     echo "chain_5_reached_turn=$chain_5_reached_turn"
     echo "chain_6_reached_turn=$chain_6_reached_turn"
+    echo "chain_7_reached_turn=$chain_7_reached_turn"
     echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
@@ -2409,6 +2433,7 @@ main() {
     echo "autumn_elf_keep_seen=$autumn_elf_keep_seen"
     echo "autumn_dwarf_keep_seen=$autumn_dwarf_keep_seen"
     echo "winter_state_seen=$winter_state_seen"
+    echo "second_winter_state_seen=$second_winter_state_seen"
     echo "winter_undead_raid_seen=$winter_undead_raid_seen"
     echo "winter_elf_raid_seen=$winter_elf_raid_seen"
     echo "winter_dwarf_raid_seen=$winter_dwarf_raid_seen"
