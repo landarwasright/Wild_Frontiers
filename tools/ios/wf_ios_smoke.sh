@@ -81,6 +81,10 @@ WF_WAIT_FOR_WINTER_UNDEAD_RAID=${WF_WAIT_FOR_WINTER_UNDEAD_RAID:-0}
 WF_WAIT_FOR_WINTER_ELF_RAID=${WF_WAIT_FOR_WINTER_ELF_RAID:-0}
 WF_WAIT_FOR_WINTER_DWARF_RAID=${WF_WAIT_FOR_WINTER_DWARF_RAID:-0}
 WF_WAIT_FOR_WINTER_RUIN_CASTLE=${WF_WAIT_FOR_WINTER_RUIN_CASTLE:-0}
+WF_WAIT_FOR_SECOND_WINTER_UNDEAD_RAID=${WF_WAIT_FOR_SECOND_WINTER_UNDEAD_RAID:-0}
+WF_WAIT_FOR_SECOND_WINTER_ELF_RAID=${WF_WAIT_FOR_SECOND_WINTER_ELF_RAID:-0}
+WF_WAIT_FOR_SECOND_WINTER_DWARF_RAID=${WF_WAIT_FOR_SECOND_WINTER_DWARF_RAID:-0}
+WF_WAIT_FOR_SECOND_WINTER_RUIN_CASTLE=${WF_WAIT_FOR_SECOND_WINTER_RUIN_CASTLE:-0}
 WF_WAIT_FOR_SPRING_STATE=${WF_WAIT_FOR_SPRING_STATE:-0}
 WF_WAIT_FOR_SPRING_ORC_RAID=${WF_WAIT_FOR_SPRING_ORC_RAID:-0}
 WF_WAIT_FOR_SPRING_UNDEAD_RAID=${WF_WAIT_FOR_SPRING_UNDEAD_RAID:-0}
@@ -642,7 +646,7 @@ inject_debug_overlay() {
         print "            local leaders = wesnoth.units.find_on_map { side = 7, role = \"undead_leader\" }"
         print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
         print "            local side7_units = wesnoth.units.find_on_map { side = 7 }"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_undead_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side7_units=\" .. tostring(#side7_units))"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_undead_raid scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" leader_type=\" .. leader_type .. \" side7_units=\" .. tostring(#side7_units))"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -655,7 +659,7 @@ inject_debug_overlay() {
         print "            local leaders = wesnoth.units.find_on_map { side = 6, role = \"elf_leader\" }"
         print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
         print "            local side6_units = wesnoth.units.find_on_map { side = 6 }"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_elves_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side6_units=\" .. tostring(#side6_units))"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_elves_raid scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" leader_type=\" .. leader_type .. \" side6_units=\" .. tostring(#side6_units))"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -668,7 +672,7 @@ inject_debug_overlay() {
         print "            local leaders = wesnoth.units.find_on_map { side = 6, role = \"dwarf_leader\" }"
         print "            local leader_type = leaders[1] and tostring(leaders[1].type) or \"\""
         print "            local side6_units = wesnoth.units.find_on_map { side = 6 }"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_dwarves_raid scenario=" scenario_id " leader_type=\" .. leader_type .. \" side6_units=\" .. tostring(#side6_units))"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION winter_dwarves_raid scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" leader_type=\" .. leader_type .. \" side6_units=\" .. tostring(#side6_units))"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -685,7 +689,7 @@ inject_debug_overlay() {
         print "        [then]"
         print "            [lua]"
         print "                code=<<"
-        print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_castle scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
+        print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_castle scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
         print "                >>"
         print "            [/lua]"
         print "        [/then]"
@@ -1421,7 +1425,7 @@ inject_debug_overlay() {
           print "            [/terrain]"
           print "            [lua]"
           print "                code=<<"
-          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_seed scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
+          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_seed scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
           print "                >>"
           print "            [/lua]"
           print "            [terrain]"
@@ -1430,7 +1434,7 @@ inject_debug_overlay() {
           print "            [/terrain]"
           print "            [lua]"
           print "                code=<<"
-          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_castle scenario=" scenario_id " x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
+          print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION winter_ruin_castle scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" x=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_x\"] or \"\") .. \" y=\" .. tostring(wml.variables[\"wf_automation.winter_ruin_y\"] or \"\"))"
           print "                >>"
           print "            [/lua]"
           print "            [clear_variable]"
@@ -2124,6 +2128,22 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_state scenario=$WF_CHAIN_SCENARIO_7 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "second_winter_state status=$run_status"
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_UNDEAD_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_undead_raid scenario=$WF_CHAIN_SCENARIO_7 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_winter_undead_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_ELF_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_elves_raid scenario=$WF_CHAIN_SCENARIO_7 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_winter_elves_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_DWARF_RAID" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_dwarves_raid scenario=$WF_CHAIN_SCENARIO_7 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_winter_dwarves_raid status=$run_status"
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_RUIN_CASTLE" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION winter_ruin_castle scenario=$WF_CHAIN_SCENARIO_7 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_winter_ruin_castle status=$run_status"
+    fi
     if (( WF_CHAIN_7_END_TURNS > 0 )); then
       advance_turns "$log_path" "$WF_CHAIN_7_END_TURNS" "$WF_CHAIN_SCENARIO_7" "${WF_CHAIN_SCENARIO_7}-cycle2-turn" || run_status=$?
       note_progress "chain_scenario_7_complete status=$run_status"
@@ -2172,6 +2192,10 @@ main() {
   local winter_elf_raid_seen=""
   local winter_dwarf_raid_seen=""
   local winter_ruin_castle_seen=""
+  local second_winter_undead_raid_seen=""
+  local second_winter_elf_raid_seen=""
+  local second_winter_dwarf_raid_seen=""
+  local second_winter_ruin_castle_seen=""
   local spring_state_seen=""
   local spring_orc_raid_seen=""
   local spring_undead_raid_seen=""
@@ -2320,6 +2344,34 @@ main() {
         second_winter_state_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_UNDEAD_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_undead_raid scenario=$WF_CHAIN_SCENARIO_7 year=1" "$log_path"; then
+        second_winter_undead_raid_seen=yes
+      else
+        second_winter_undead_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_ELF_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_elves_raid scenario=$WF_CHAIN_SCENARIO_7 year=1" "$log_path"; then
+        second_winter_elf_raid_seen=yes
+      else
+        second_winter_elf_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_DWARF_RAID" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_dwarves_raid scenario=$WF_CHAIN_SCENARIO_7 year=1" "$log_path"; then
+        second_winter_dwarf_raid_seen=yes
+      else
+        second_winter_dwarf_raid_seen=no
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_WINTER_RUIN_CASTLE" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION winter_ruin_castle scenario=$WF_CHAIN_SCENARIO_7 year=1" "$log_path"; then
+        second_winter_ruin_castle_seen=yes
+      else
+        second_winter_ruin_castle_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_WINTER_UNDEAD_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION winter_undead_raid scenario=Winter_of_Storms" "$log_path"; then
         winter_undead_raid_seen=yes
@@ -2438,6 +2490,10 @@ main() {
     echo "winter_elf_raid_seen=$winter_elf_raid_seen"
     echo "winter_dwarf_raid_seen=$winter_dwarf_raid_seen"
     echo "winter_ruin_castle_seen=$winter_ruin_castle_seen"
+    echo "second_winter_undead_raid_seen=$second_winter_undead_raid_seen"
+    echo "second_winter_elf_raid_seen=$second_winter_elf_raid_seen"
+    echo "second_winter_dwarf_raid_seen=$second_winter_dwarf_raid_seen"
+    echo "second_winter_ruin_castle_seen=$second_winter_ruin_castle_seen"
     echo "spring_state_seen=$spring_state_seen"
     echo "spring_orc_raid_seen=$spring_orc_raid_seen"
     echo "spring_undead_raid_seen=$spring_undead_raid_seen"
