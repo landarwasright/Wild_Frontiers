@@ -27,7 +27,9 @@ WF_NEXT_SCENARIO=${WF_NEXT_SCENARIO:-Summer_of_Dreams}
 WF_CHAIN_SCENARIO_2=${WF_CHAIN_SCENARIO_2:-}
 WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
 WF_CHAIN_SCENARIO_4=${WF_CHAIN_SCENARIO_4:-}
+WF_CHAIN_SCENARIO_5=${WF_CHAIN_SCENARIO_5:-}
 WF_NEXT_END_TURNS=${WF_NEXT_END_TURNS:-0}
+WF_CHAIN_5_END_TURNS=${WF_CHAIN_5_END_TURNS:-0}
 WF_WAIT_FOR_SCENARIO_END=${WF_WAIT_FOR_SCENARIO_END:-0}
 WF_SCENARIO_END_TIMEOUT=${WF_SCENARIO_END_TIMEOUT:-300}
 WF_FORCE_KEEP=${WF_FORCE_KEEP:-0}
@@ -35,6 +37,7 @@ WF_FORCE_SEASON_END=${WF_FORCE_SEASON_END:-0}
 WF_FORCE_SUMMER_END=${WF_FORCE_SUMMER_END:-0}
 WF_FORCE_AUTUMN_END=${WF_FORCE_AUTUMN_END:-0}
 WF_FORCE_WINTER_END=${WF_FORCE_WINTER_END:-0}
+WF_FORCE_SPRING_END=${WF_FORCE_SPRING_END:-0}
 WF_FORCE_SUMMER_OUTLAW_RAID=${WF_FORCE_SUMMER_OUTLAW_RAID:-0}
 WF_FORCE_SUMMER_BANDIT_RAID=${WF_FORCE_SUMMER_BANDIT_RAID:-0}
 WF_FORCE_SUMMER_ORC_RAID=${WF_FORCE_SUMMER_ORC_RAID:-0}
@@ -75,6 +78,7 @@ WF_WAIT_FOR_SPRING_STATE=${WF_WAIT_FOR_SPRING_STATE:-0}
 WF_WAIT_FOR_SPRING_ORC_RAID=${WF_WAIT_FOR_SPRING_ORC_RAID:-0}
 WF_WAIT_FOR_SPRING_UNDEAD_RAID=${WF_WAIT_FOR_SPRING_UNDEAD_RAID:-0}
 WF_WAIT_FOR_SPRING_DROWNING=${WF_WAIT_FOR_SPRING_DROWNING:-0}
+WF_WAIT_FOR_SECOND_SUMMER_STATE=${WF_WAIT_FOR_SECOND_SUMMER_STATE:-0}
 WF_FORCE_SUMMER_CALAMITY_SIGHTING=${WF_FORCE_SUMMER_CALAMITY_SIGHTING:-0}
 WF_FORCE_SUMMER_CALAMITY_KILL=${WF_FORCE_SUMMER_CALAMITY_KILL:-0}
 WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING=${WF_WAIT_FOR_SUMMER_CALAMITY_SIGHTING:-0}
@@ -201,7 +205,7 @@ inject_debug_overlay() {
   local scenario_id=$2
   local temp_path="$scenario_path.tmp"
 
-  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_winter_end="$WF_FORCE_WINTER_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_winter_undead_raid="$WF_FORCE_WINTER_UNDEAD_RAID" -v force_winter_elf_raid="$WF_FORCE_WINTER_ELF_RAID" -v force_winter_dwarf_raid="$WF_FORCE_WINTER_DWARF_RAID" -v force_winter_ruin_castle="$WF_FORCE_WINTER_RUIN_CASTLE" -v force_spring_orc_raid="$WF_FORCE_SPRING_ORC_RAID" -v force_spring_undead_raid="$WF_FORCE_SPRING_UNDEAD_RAID" -v force_spring_drowning="$WF_FORCE_SPRING_DROWNING" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
+  awk -v scenario_id="$scenario_id" -v force_keep="$WF_FORCE_KEEP" -v force_season_end="$WF_FORCE_SEASON_END" -v force_summer_end="$WF_FORCE_SUMMER_END" -v force_autumn_end="$WF_FORCE_AUTUMN_END" -v force_winter_end="$WF_FORCE_WINTER_END" -v force_spring_end="$WF_FORCE_SPRING_END" -v force_summer_outlaw_raid="$WF_FORCE_SUMMER_OUTLAW_RAID" -v force_summer_bandit_raid="$WF_FORCE_SUMMER_BANDIT_RAID" -v force_summer_orc_raid="$WF_FORCE_SUMMER_ORC_RAID" -v force_summer_undead_raid="$WF_FORCE_SUMMER_UNDEAD_RAID" -v force_summer_calamity_type="$WF_FORCE_SUMMER_CALAMITY_TYPE" -v force_summer_gryphon_nest="$WF_FORCE_SUMMER_GRYPHON_NEST" -v force_summer_loyalist_camp="$WF_FORCE_SUMMER_LOYALIST_CAMP" -v force_summer_loyalist_ditch_keep="$WF_FORCE_SUMMER_LOYALIST_DITCH_KEEP" -v force_summer_saurian_keep="$WF_FORCE_SUMMER_SAURIAN_KEEP" -v force_autumn_elf_keep="$WF_FORCE_AUTUMN_ELF_KEEP" -v force_autumn_dwarf_keep="$WF_FORCE_AUTUMN_DWARF_KEEP" -v force_winter_undead_raid="$WF_FORCE_WINTER_UNDEAD_RAID" -v force_winter_elf_raid="$WF_FORCE_WINTER_ELF_RAID" -v force_winter_dwarf_raid="$WF_FORCE_WINTER_DWARF_RAID" -v force_winter_ruin_castle="$WF_FORCE_WINTER_RUIN_CASTLE" -v force_spring_orc_raid="$WF_FORCE_SPRING_ORC_RAID" -v force_spring_undead_raid="$WF_FORCE_SPRING_UNDEAD_RAID" -v force_spring_drowning="$WF_FORCE_SPRING_DROWNING" -v force_summer_calamity_sighting="$WF_FORCE_SUMMER_CALAMITY_SIGHTING" -v force_summer_calamity_kill="$WF_FORCE_SUMMER_CALAMITY_KILL" '
     scenario_id == "Summer_of_Dreams" && force_summer_calamity_type != "" && /\{CALAMITIES_MAY_OCCUR\}/ && !inserted_calamity_prestart {
       print ""
       print "[event]"
@@ -244,7 +248,7 @@ inject_debug_overlay() {
         print "    name=start"
         print "    [lua]"
         print "        code=<<"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_state scenario=" scenario_id " drought=\" .. tostring(wml.variables[\"wf_vars.drought\"] or \"\") .. \" calamity_type=\" .. tostring(wml.variables[\"relations.calamity_type\"] or \"\"))"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION summer_state scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" drought=\" .. tostring(wml.variables[\"wf_vars.drought\"] or \"\") .. \" calamity_type=\" .. tostring(wml.variables[\"relations.calamity_type\"] or \"\"))"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -690,7 +694,7 @@ inject_debug_overlay() {
         print "            local side1 = wesnoth.sides[1]"
         print "            local village_gold = side1 and tostring(side1.village_gold or \"\") or \"\""
         print "            local village_support = side1 and tostring(side1.village_support or \"\") or \"\""
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_state scenario=" scenario_id " economy=\" .. tostring(wml.variables[\"wf_vars.economy\"] or \"\") .. \" village_gold=\" .. village_gold .. \" village_support=\" .. village_support)"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION spring_state scenario=" scenario_id " year=\" .. tostring(wml.variables[\"wf_vars.year\"] or \"\") .. \" economy=\" .. tostring(wml.variables[\"wf_vars.economy\"] or \"\") .. \" village_gold=\" .. village_gold .. \" village_support=\" .. village_support)"
         print "        >>"
         print "    [/lua]"
         print "[/event]"
@@ -1558,14 +1562,26 @@ inject_debug_overlay() {
         print "        name=wf_time_over"
         print "    [/fire_event]"
       } else if (scenario_id == "Summer_of_Dreams" && force_summer_end == "1") {
-        print "    [lua]"
-        print "        code=<<"
-        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
-        print "        >>"
-        print "    [/lua]"
-        print "    [fire_event]"
-        print "        name=wf_time_over"
-        print "    [/fire_event]"
+        print "    [if]"
+        print "        [variable]"
+        print "            name=wf_vars.year"
+        print "            numerical_equals=0"
+        print "        [/variable]"
+        print "        [then]"
+        print "            [lua]"
+        print "                code=<<"
+        print "                    wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
+        print "                >>"
+        print "            [/lua]"
+        print "            [fire_event]"
+        print "                name=wf_time_over"
+        print "            [/fire_event]"
+        print "        [/then]"
+        print "        [else]"
+        print "            [end_turn]"
+        print "            [/end_turn]"
+        print "        [/else]"
+        print "    [/if]"
       } else if (scenario_id == "Autumn_of_Gold" && force_autumn_end == "1") {
         print "    [lua]"
         print "        code=<<"
@@ -1576,6 +1592,15 @@ inject_debug_overlay() {
         print "        name=wf_time_over"
         print "    [/fire_event]"
       } else if (scenario_id == "Winter_of_Storms" && force_winter_end == "1") {
+        print "    [lua]"
+        print "        code=<<"
+        print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
+        print "        >>"
+        print "    [/lua]"
+        print "    [fire_event]"
+        print "        name=wf_time_over"
+        print "    [/fire_event]"
+      } else if (scenario_id == "Spring_of_Raindrops" && force_spring_end == "1") {
         print "    [lua]"
         print "        code=<<"
         print "            wesnoth.log(\"warning\", \"WF_AUTOMATION event=force_season_end scenario=" scenario_id "\")"
@@ -2039,6 +2064,24 @@ main() {
       wait_for_log_text_with_return "$log_path" "WF_AUTOMATION spring_drowning scenario=$WF_CHAIN_SCENARIO_4" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
       note_progress "spring_drowning status=$run_status"
     fi
+    if [[ -n "$WF_CHAIN_SCENARIO_5" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION event=wf_victory scenario=$WF_CHAIN_SCENARIO_4 next=$WF_CHAIN_SCENARIO_5" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "chain_scenario_5_victory_marker status=$run_status"
+      if [[ "$WF_CHAIN_SCENARIO_5" != "$WF_NEXT_SCENARIO" ]]; then
+        wait_for_log_text_with_return "$log_path" "WF_AUTOMATION overlay_ready scenario=$WF_CHAIN_SCENARIO_5" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+        note_progress "chain_scenario_5_overlay_ready status=$run_status"
+        wait_for_log_text_with_return "$log_path" "WF_AUTOMATION side1_turn_refresh scenario=$WF_CHAIN_SCENARIO_5 turn=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+        note_progress "chain_scenario_5_turn1 status=$run_status"
+      fi
+    fi
+    if [[ "$WF_WAIT_FOR_SECOND_SUMMER_STATE" == "1" ]]; then
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION summer_state scenario=$WF_CHAIN_SCENARIO_5 year=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "second_summer_state status=$run_status"
+    fi
+    if (( WF_CHAIN_5_END_TURNS > 0 )); then
+      advance_turns "$log_path" "$WF_CHAIN_5_END_TURNS" "$WF_CHAIN_SCENARIO_5" "${WF_CHAIN_SCENARIO_5}-cycle2-turn" || run_status=$?
+      note_progress "chain_scenario_5_complete status=$run_status"
+    fi
   fi
 
   local after_log
@@ -2058,6 +2101,7 @@ main() {
   local autumn_reached_turn=""
   local winter_reached_turn=""
   local spring_reached_turn=""
+  local chain_5_reached_turn=""
   local summer_outlaw_raid_seen=""
   local summer_bandit_raid_seen=""
   local summer_orc_raid_seen=""
@@ -2082,6 +2126,7 @@ main() {
   local spring_orc_raid_seen=""
   local spring_undead_raid_seen=""
   local spring_drowning_seen=""
+  local second_summer_state_seen=""
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
@@ -2095,6 +2140,9 @@ main() {
     fi
     if [[ -n "$WF_CHAIN_SCENARIO_4" ]]; then
       spring_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_4")
+    fi
+    if [[ -n "$WF_CHAIN_SCENARIO_5" ]]; then
+      chain_5_reached_turn=$(extract_log_turn "$log_path" "$WF_CHAIN_SCENARIO_5")
     fi
     if [[ "$WF_WAIT_FOR_SUMMER_OUTLAW_RAID" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_outlaw_raid scenario=$WF_NEXT_SCENARIO" "$log_path"; then
@@ -2258,6 +2306,13 @@ main() {
         spring_drowning_seen=no
       fi
     fi
+    if [[ "$WF_WAIT_FOR_SECOND_SUMMER_STATE" == "1" ]]; then
+      if rg -Fq "WF_AUTOMATION summer_state scenario=$WF_CHAIN_SCENARIO_5 year=1" "$log_path"; then
+        second_summer_state_seen=yes
+      else
+        second_summer_state_seen=no
+      fi
+    fi
     if [[ "$WF_WAIT_FOR_SUMMER_CALAMITY_KILL" == "1" ]]; then
       if rg -Fq "WF_AUTOMATION summer_calamity_kill scenario=$WF_NEXT_SCENARIO type=$WF_FORCE_SUMMER_CALAMITY_TYPE" "$log_path"; then
         summer_calamity_kill_seen=yes
@@ -2287,6 +2342,7 @@ main() {
     echo "autumn_reached_turn=$autumn_reached_turn"
     echo "winter_reached_turn=$winter_reached_turn"
     echo "spring_reached_turn=$spring_reached_turn"
+    echo "chain_5_reached_turn=$chain_5_reached_turn"
     echo "summer_outlaw_raid_seen=$summer_outlaw_raid_seen"
     echo "summer_bandit_raid_seen=$summer_bandit_raid_seen"
     echo "summer_orc_raid_seen=$summer_orc_raid_seen"
@@ -2312,6 +2368,7 @@ main() {
     echo "spring_orc_raid_seen=$spring_orc_raid_seen"
     echo "spring_undead_raid_seen=$spring_undead_raid_seen"
     echo "spring_drowning_seen=$spring_drowning_seen"
+    echo "second_summer_state_seen=$second_summer_state_seen"
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
     echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
