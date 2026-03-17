@@ -1,4 +1,4 @@
-author="vghetto"
+author="vghetto, landarwasright"
 description="Settle a new town north of the Great River.
 
 A town-building Wesnoth campaign, requiring you to balance the building of new villages against the need to defend them.
@@ -9,7 +9,9 @@ Install the add-on 'Ultimate_Random_Maps' for additional maps.
 
 Wild Frontiers is a fork of 'Cities of the Frontier' v0.6.1 by esci.
 
-https://github.com/virtualghetto/Wild_Frontiers"
+This release updates the add-on for current Wesnoth 1.19 development builds.
+
+https://github.com/landarwasright/Wild_Frontiers"
 email=
 icon="scenery/windmill-11.png~SCALE(70,70)~BG(0, 0, 0)"
 passphrase=
@@ -17,7 +19,7 @@ tags="CotF,ANL,WF,URM"
 title="Wild Frontiers"
 translate=true
 type="campaign"
-version="3.3.1"
+version="3.4.0"
 [feedback]
 	topic_id=51541
 [/feedback]
