@@ -1,0 +1,28 @@
+# Default Wesnoth upload filters
+.+
+.+/
+__MACOSX/
+#*#
+*~
+*-bak
+*.swp
+*.pbl
+*.ign
+_info.cfg
+*.exe
+*.bat
+*.cmd
+*.com
+*.scr
+*.sh
+*.js
+*.vbs
+*.o
+*.ini
+Thumbs.db
+*.wesnoth
+*.project
+
+# Local development-only content
+tools/
+working/
