@@ -1,6 +1,6 @@
 -- zone_guardian with village healing (probably from generic_rush_engine.lua). can't remember
 -- find nearest hex from goto micro ai
-local H = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
+local H = wesnoth.require "~add-ons/Wild_Frontiers_LWR/lua/wf_helper.lua"
 local AH = wesnoth.require "ai/lua/ai_helper.lua"
 local LS = wesnoth.require "location_set"
 local M = wesnoth.map

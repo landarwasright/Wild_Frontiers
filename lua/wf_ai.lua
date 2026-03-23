@@ -1,4 +1,4 @@
-local H = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
+local H = wesnoth.require "~add-ons/Wild_Frontiers_LWR/lua/wf_helper.lua"
 
 -- force_gamestate_change 1.14 by mattsc
 local AH = wesnoth.require "ai/lua/ai_helper.lua"
@@ -43,7 +43,7 @@ function wesnoth.micro_ais.wf_zone_guardian(cfg)
 	local optional_keys = { id = 'string', filter = 'tag', filter_location_enemy = 'tag', station_x = 'integer', station_y = 'integer' }
 	local CA_parms = {
 		ai_id = 'mai_wf_zone_guardian',
-		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers/ai/ca_wf_zone_guardian.lua', score = cfg.ca_score or 300000 }
+		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers_LWR/ai/ca_wf_zone_guardian.lua', score = cfg.ca_score or 300000 }
 	}
     return required_keys, optional_keys, CA_parms
 end
@@ -56,7 +56,7 @@ function wesnoth.micro_ais.wf_loiter_guardian(cfg)
 	local optional_keys = { id = 'string', filter = 'tag', stationary = 'boolean' }
 	local CA_parms = {
 		ai_id = 'mai_wf_loiter_guardian',
-		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers/ai/ca_wf_loiter_guardian.lua', score = cfg.ca_score or 99900 }
+		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers_LWR/ai/ca_wf_loiter_guardian.lua', score = cfg.ca_score or 99900 }
 	}
     return required_keys, optional_keys, CA_parms
 end
@@ -69,7 +69,7 @@ function wesnoth.micro_ais.wf_curse_guardian(cfg)
 	local optional_keys = { id = 'string', filter = 'tag' }
 	local CA_parms = {
 		ai_id = 'mai_wf_curse_guardian',
-		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers/ai/ca_wf_curse_guardian.lua', score = cfg.ca_score or 99900 }
+		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers_LWR/ai/ca_wf_curse_guardian.lua', score = cfg.ca_score or 99900 }
 	}
     return required_keys, optional_keys, CA_parms
 end
@@ -83,7 +83,7 @@ function wesnoth.micro_ais.wf_goto(cfg)
 	}
 	local CA_parms = {
 		ai_id = 'mai_wf_goto',
-		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers/ai/ca_wf_goto.lua', score = cfg.ca_score or 300000 }
+		{ ca_id = 'move', location = '~add-ons/Wild_Frontiers_LWR/ai/ca_wf_goto.lua', score = cfg.ca_score or 300000 }
 	}
     return required_keys, optional_keys, CA_parms
 end
@@ -97,7 +97,7 @@ function wesnoth.micro_ais.wf_move_last(cfg)
 	local score = cfg.ca_score or 300000
         local CA_parms = {
                 ai_id = 'mai_wf_move_last',
-                { ca_id = 'move', location = '~add-ons/Wild_Frontiers/ai/ca_wf_move_last.lua', score = score }
+                { ca_id = 'move', location = '~add-ons/Wild_Frontiers_LWR/ai/ca_wf_move_last.lua', score = score }
         }
     return required_keys, optional_keys, CA_parms
 end

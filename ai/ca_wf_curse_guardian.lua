@@ -1,6 +1,6 @@
 -- Based on the attack code of zone_guardian
 local AH = wesnoth.require "ai/lua/ai_helper.lua"
-local H = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
+local H = wesnoth.require "~add-ons/Wild_Frontiers_LWR/lua/wf_helper.lua"
 local M = wesnoth.map
 
 local function wf_get_guardian(cfg)

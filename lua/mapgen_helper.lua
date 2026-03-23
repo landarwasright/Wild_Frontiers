@@ -1,5 +1,5 @@
 local LS = wesnoth.require "location_set"
-local helper = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
+local helper = wesnoth.require "~add-ons/Wild_Frontiers_LWR/lua/wf_helper.lua"
 
 local mapgen_helper, map_mt = {}, {__index = {}}
 
