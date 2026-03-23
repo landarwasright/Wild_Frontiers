@@ -23,6 +23,8 @@ WF_USE_DEBUG_OVERLAY=${WF_USE_DEBUG_OVERLAY:-1}
 WF_NOCACHE=${WF_NOCACHE:-1}
 WF_ADVANCE_TIMEOUT=${WF_ADVANCE_TIMEOUT:-0}
 WF_START_SCENARIO=${WF_START_SCENARIO:-A_New_Beginning}
+WF_START_ECONOMY=${WF_START_ECONOMY:-farming}
+WF_START_BONUS_EVENTS=${WF_START_BONUS_EVENTS:-}
 WF_NEXT_SCENARIO=${WF_NEXT_SCENARIO:-Summer_of_Dreams}
 WF_LOAD_SAVE=${WF_LOAD_SAVE:-}
 WF_LOAD_SCENARIO=${WF_LOAD_SCENARIO:-}
@@ -1803,12 +1805,92 @@ inject_side_start_seed() {
   mv "$temp_path" "$scenario_path"
 }
 
+prepare_a_new_beginning_start() {
+  local scenario_path=$1
+  local temp_path="$scenario_path.start"
+
+  perl -0pi -e 's/\[set_variable\]\s+name=selected_options\s+\{STARTING_BONUS\}\s+\[\/set_variable\]/[set_variable]\n            name=selected_options\n            value=0\n        [\/set_variable]/s' "$scenario_path"
+
+  awk -v start_economy="$WF_START_ECONOMY" -v start_bonus_events="$WF_START_BONUS_EVENTS" '
+    BEGIN {
+      start_economy_value = start_economy
+      if (start_economy_value == "") {
+        start_economy_value = "farming"
+      }
+      start_bonus_events_value = start_bonus_events
+      if (start_bonus_events_value == "") {
+        start_bonus_events_value = "none"
+      }
+    }
+    /\{CLEAR_VARIABLE selected_options\}/ && !inserted {
+      if (start_economy == "hunting") {
+        print "        [set_variable]"
+        print "            name=wf_vars.economy"
+        print "            value=yes"
+        print "        [/set_variable]"
+        print "        [set_variable]"
+        print "            name=relations.outlaws"
+        print "            value=-18"
+        print "        [/set_variable]"
+        print "        [set_variable]"
+        print "            name=farm_income.spring"
+        print "            value=0"
+        print "        [/set_variable]"
+        print "        [modify_side]"
+        print "            side=1"
+        print "            village_gold=$farm_income.spring"
+        print "            village_support=$farm_support.spring"
+        print "        [/modify_side]"
+      }
+      if (start_bonus_events != "") {
+        bonus_count = split(start_bonus_events, bonus_events, ",")
+        for (bonus_index = 1; bonus_index <= bonus_count; bonus_index++) {
+          bonus_event = bonus_events[bonus_index]
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "", bonus_event)
+          if (bonus_event != "") {
+            print "        [fire_event]"
+            print "            name=bonus_" bonus_event
+            print "        [/fire_event]"
+          }
+        }
+      }
+      print "        [store_gold]"
+      print "            side=1"
+      print "            variable=wf_automation.start_gold"
+      print "        [/store_gold]"
+      print "        [lua]"
+      print "            code=<<"
+      print "                local side1 = wesnoth.sides[1]"
+      print "                local village_gold = side1 and tostring(side1.village_gold or \"\") or \"\""
+      print "                local village_support = side1 and tostring(side1.village_support or \"\") or \"\""
+      print "                local function count_units(filter)"
+      print "                    return #wesnoth.units.find_on_map(filter)"
+      print "                end"
+      print "                local followers = count_units { id = \"loyal_peasant\" } + count_units { id = \"loyal_woodsman\" } + count_units { id = \"loyal_ruffian\" } + count_units { id = \"loyal_fencer\" }"
+      print "                local guardian = count_units { id = \"loyal_paladin\" } + count_units { id = \"loyal_knight\" } + count_units { id = \"loyal_avenger\" }"
+      print "                wesnoth.log(\"warning\", \"WF_AUTOMATION a_new_beginning_state scenario=A_New_Beginning requested_economy=" start_economy_value " economy=\" .. tostring(wml.variables[\"wf_vars.economy\"] or \"\") .. \" requested_bonus_events=" start_bonus_events_value " village_gold=\" .. village_gold .. \" village_support=\" .. village_support .. \" side1_gold=\" .. tostring(wml.variables[\"wf_automation.start_gold\"] or \"\") .. \" trade_kill=\" .. tostring(wml.variables[\"quota.trade_kill\"] or \"\") .. \" proj_farm=\" .. tostring(wml.variables[\"proj_costs.farm\"] or \"\") .. \" proj_keep=\" .. tostring(wml.variables[\"proj_costs.keep\"] or \"\") .. \" fungi_book=\" .. tostring(wml.variables[\"wf_vars.fungi_book\"] or \"\") .. \" law_book=\" .. tostring(wml.variables[\"wf_vars.law_book\"] or \"\") .. \" followers=\" .. tostring(followers) .. \" workers=\" .. tostring(count_units { id = \"loyal_worker\" }) .. \" guardian=\" .. tostring(guardian) .. \" mage=\" .. tostring(count_units { id = \"loyal_mage\" }) .. \" prisoner=\" .. tostring(count_units { id = \"loyal_adept\" }))"
+      print "            >>"
+      print "        [/lua]"
+      print "        [clear_variable]"
+      print "            name=wf_automation.start_gold"
+      print "        [/clear_variable]"
+      inserted=1
+    }
+    { print }
+  ' "$scenario_path" > "$temp_path"
+
+  mv "$temp_path" "$scenario_path"
+}
+
 sync_addon() {
   local container=$1
   local addon_dir="$container/Library/Application Support/wesnoth.org/iWesnoth/data/add-ons/$WF_ADDON_NAME"
   mkdir -p "$addon_dir"
   rsync -a --delete --exclude='.git/' "$ROOT_DIR/" "$addon_dir/"
   perl -0pi -e 's/^\s*first_scenario=.*/    first_scenario='"$WF_START_SCENARIO"'/m' "$addon_dir/_main.cfg"
+  if [[ "$WF_START_SCENARIO" == "A_New_Beginning" ]]; then
+    prepare_a_new_beginning_start "$addon_dir/scenarios/a_new_beginning.cfg"
+  fi
   if [[ "$WF_USE_DEBUG_OVERLAY" == "1" ]]; then
     local -a overlay_scenarios=(
       "a_new_beginning.cfg:A_New_Beginning"
@@ -1910,6 +1992,18 @@ error_check() {
   rm -f "$ARTIFACT_DIR/errors.txt"
 }
 
+select_start_economy() {
+  case "$WF_START_ECONOMY" in
+    farming|hunting)
+      send_key return
+      ;;
+    *)
+      echo "Unsupported WF_START_ECONOMY: $WF_START_ECONOMY" >&2
+      return 1
+      ;;
+  esac
+}
+
 wait_for_log_text() {
   local log_path=$1
   local needle=$2
@@ -2005,6 +2099,19 @@ extract_summer_calamity_aftermath_gold() {
   rg -o "WF_AUTOMATION summer_calamity_aftermath scenario=${scenario_id} type=${calamity_type} side1_gold=[0-9]+" "$log_path" 2>/dev/null \
     | sed 's/.*side1_gold=//' \
     | tail -n 1 || true
+}
+
+extract_log_field() {
+  local log_path=$1
+  local prefix=$2
+  local field=$3
+
+  rg -F "$prefix" "$log_path" 2>/dev/null \
+    | tail -n 1 \
+    | tr ' ' '\n' \
+    | rg "^${field}=" \
+    | tail -n 1 \
+    | sed "s/^${field}=//" || true
 }
 
 capture_turn_number() {
@@ -2126,17 +2233,9 @@ main() {
     if [[ "$WF_START_SCENARIO" == "A_New_Beginning" ]]; then
       wait_for_text "Which type would you like to use?" "economy-dialog" 180
 
-      send_key return
-      wait_for_text "Nevermind" "bonus-dialog" 90
-
-      send_key down "$WF_BONUS_DOWN_COUNT"
-      send_key return
-      send_key return
-      wait_until_clear "post-start" 120 \
-        "Which type would you like to use?" \
-        "Nevermind" \
-        "Starting game..." \
-        "Reading files and creating cache..."
+      select_start_economy || run_status=$?
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "a_new_beginning_state status=$run_status"
       note_progress "startup_complete"
     else
       advance_story_screens "$WF_START_STORY_MAX_PAGES" || run_status=$?
@@ -2408,6 +2507,21 @@ main() {
   local summer_calamity_kill_seen=""
   local summer_calamity_aftermath_seen=""
   local summer_calamity_aftermath_side1_gold=""
+  local a_new_beginning_state_seen=""
+  local a_new_beginning_requested_economy=""
+  local a_new_beginning_state_economy=""
+  local a_new_beginning_requested_bonus_events=""
+  local a_new_beginning_village_gold=""
+  local a_new_beginning_side1_gold=""
+  local a_new_beginning_trade_kill=""
+  local a_new_beginning_proj_farm=""
+  local a_new_beginning_fungi_book=""
+  local a_new_beginning_law_book=""
+  local a_new_beginning_followers=""
+  local a_new_beginning_workers=""
+  local a_new_beginning_guardian=""
+  local a_new_beginning_mage=""
+  local a_new_beginning_prisoner=""
   if [[ -n "$WF_LOAD_SAVE" ]]; then
     if [[ -n "$WF_LOAD_SCENARIO" ]]; then
       load_reached_turn=$(extract_log_turn "$log_path" "$WF_LOAD_SCENARIO")
@@ -2707,6 +2821,27 @@ main() {
       summer_calamity_aftermath_side1_gold=$(extract_summer_calamity_aftermath_gold "$log_path" "$WF_NEXT_SCENARIO" "$WF_FORCE_SUMMER_CALAMITY_TYPE")
     fi
   fi
+  if [[ "$WF_START_SCENARIO" == "A_New_Beginning" ]]; then
+    if rg -Fq "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "$log_path"; then
+      a_new_beginning_state_seen=yes
+    else
+      a_new_beginning_state_seen=no
+    fi
+    a_new_beginning_requested_economy=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "requested_economy")
+    a_new_beginning_state_economy=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "economy")
+    a_new_beginning_requested_bonus_events=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "requested_bonus_events")
+    a_new_beginning_village_gold=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "village_gold")
+    a_new_beginning_side1_gold=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "side1_gold")
+    a_new_beginning_trade_kill=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "trade_kill")
+    a_new_beginning_proj_farm=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "proj_farm")
+    a_new_beginning_fungi_book=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "fungi_book")
+    a_new_beginning_law_book=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "law_book")
+    a_new_beginning_followers=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "followers")
+    a_new_beginning_workers=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "workers")
+    a_new_beginning_guardian=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "guardian")
+    a_new_beginning_mage=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "mage")
+    a_new_beginning_prisoner=$(extract_log_field "$log_path" "WF_AUTOMATION a_new_beginning_state scenario=$WF_START_SCENARIO" "prisoner")
+  fi
 
   {
     echo "artifact_dir=$ARTIFACT_DIR"
@@ -2768,6 +2903,21 @@ main() {
     echo "summer_calamity_kill_seen=$summer_calamity_kill_seen"
     echo "summer_calamity_aftermath_seen=$summer_calamity_aftermath_seen"
     echo "summer_calamity_aftermath_side1_gold=$summer_calamity_aftermath_side1_gold"
+    echo "a_new_beginning_state_seen=$a_new_beginning_state_seen"
+    echo "a_new_beginning_requested_economy=$a_new_beginning_requested_economy"
+    echo "a_new_beginning_state_economy=$a_new_beginning_state_economy"
+    echo "a_new_beginning_requested_bonus_events=$a_new_beginning_requested_bonus_events"
+    echo "a_new_beginning_village_gold=$a_new_beginning_village_gold"
+    echo "a_new_beginning_side1_gold=$a_new_beginning_side1_gold"
+    echo "a_new_beginning_trade_kill=$a_new_beginning_trade_kill"
+    echo "a_new_beginning_proj_farm=$a_new_beginning_proj_farm"
+    echo "a_new_beginning_fungi_book=$a_new_beginning_fungi_book"
+    echo "a_new_beginning_law_book=$a_new_beginning_law_book"
+    echo "a_new_beginning_followers=$a_new_beginning_followers"
+    echo "a_new_beginning_workers=$a_new_beginning_workers"
+    echo "a_new_beginning_guardian=$a_new_beginning_guardian"
+    echo "a_new_beginning_mage=$a_new_beginning_mage"
+    echo "a_new_beginning_prisoner=$a_new_beginning_prisoner"
     echo "run_status=$run_status"
   } | tee "$ARTIFACT_DIR/summary.txt"
   note_progress "summary_written status=$run_status"
