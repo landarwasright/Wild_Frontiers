@@ -1,0 +1,249 @@
+#!/bin/zsh
+set -euo pipefail
+set +x
+
+SCRIPT_DIR=${0:A:h}
+ROOT_DIR=${SCRIPT_DIR:h:h}
+
+WESNOTH_BIN=${WESNOTH_BIN:-/Users/neilhiddink/github/wesnoth/Wesnoth.app/Contents/MacOS/Wesnoth}
+WESNOTH_WORKDIR=${WESNOTH_WORKDIR:-}
+WF_ADDON_NAME=${WF_ADDON_NAME:-Wild_Frontiers}
+WF_UNIT_TEST_ID=${WF_UNIT_TEST_ID:-}
+WF_IMPORT_SAVE_PATH=${WF_IMPORT_SAVE_PATH:-}
+WF_LOAD_SAVE=${WF_LOAD_SAVE:-}
+WF_LOAD_WAIT_PATTERN=${WF_LOAD_WAIT_PATTERN:-}
+WF_TIMEOUT=${WF_TIMEOUT:-180}
+WF_NOCACHE=${WF_NOCACHE:-1}
+WF_NOREPLAYCHECK=${WF_NOREPLAYCHECK:-1}
+WF_RESOLUTION=${WF_RESOLUTION:-1280x800}
+WF_ARTIFACT_ROOT=${WF_ARTIFACT_ROOT:-$ROOT_DIR/working/desktop-smoke}
+
+timestamp=$(date +"%Y%m%d-%H%M%S")
+ARTIFACT_DIR="$WF_ARTIFACT_ROOT/$timestamp"
+RUN_USERDATA_DIR="$ARTIFACT_DIR/userdata"
+WESNOTH_PID=""
+
+mkdir -p "$ARTIFACT_DIR"
+
+note_progress() {
+  local message=$1
+  printf '%s %s\n' "$(date +"%H:%M:%S")" "$message" >> "$ARTIFACT_DIR/progress.log"
+}
+
+sync_addon() {
+  local addon_dir="$RUN_USERDATA_DIR/data/add-ons/$WF_ADDON_NAME"
+  mkdir -p "$addon_dir"
+  rsync -a --delete --exclude='.git/' "$ROOT_DIR/" "$addon_dir/"
+}
+
+resolve_workdir() {
+  if [[ -n "$WESNOTH_WORKDIR" ]]; then
+    printf '%s\n' "$WESNOTH_WORKDIR"
+    return 0
+  fi
+
+  local bin_dir="${WESNOTH_BIN:h}"
+  if [[ "$bin_dir" == */Contents/MacOS ]]; then
+    printf '%s\n' "${bin_dir:h}/Resources"
+    return 0
+  fi
+
+  printf '%s\n' "$ROOT_DIR"
+}
+
+import_save() {
+  local source_path=$1
+  local target_name=$2
+  local saves_dir="$RUN_USERDATA_DIR/saves"
+  mkdir -p "$saves_dir"
+  cp -f "$source_path" "$saves_dir/$target_name"
+}
+
+latest_log() {
+  local log_dir="$RUN_USERDATA_DIR/logs"
+  ls -1t "$log_dir" 2>/dev/null | head -n 1
+}
+
+wait_for_new_log() {
+  local before_log=${1:-}
+  local deadline=$((SECONDS + 60))
+
+  while (( SECONDS < deadline )); do
+    local current
+    current=$(latest_log)
+    if [[ -n "$current" && "$current" != "$before_log" ]]; then
+      printf '%s\n' "$current"
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "Timed out waiting for a new Wesnoth log" >&2
+  return 1
+}
+
+wait_for_log_text() {
+  local log_path=$1
+  local needle=$2
+  local timeout=${3:-180}
+  local deadline=$((SECONDS + timeout))
+
+  while (( SECONDS < deadline )); do
+    if [[ -f "$log_path" ]] && rg -Fq "$needle" "$log_path"; then
+      return 0
+    fi
+    if [[ -n "$WESNOTH_PID" ]] && ! kill -0 "$WESNOTH_PID" 2>/dev/null; then
+      echo "Wesnoth exited before log pattern appeared: $needle" >&2
+      return 1
+    fi
+    sleep 1
+  done
+
+  echo "Timed out waiting for log text: $needle" >&2
+  return 1
+}
+
+error_check() {
+  local log_path=$1
+  if rg -n "error scripting/lua:|error wml:|Error occured inside|traceback|critical|fatal" "$log_path" >"$ARTIFACT_DIR/errors.txt"; then
+    echo "Errors found in $log_path" >&2
+    cat "$ARTIFACT_DIR/errors.txt" >&2
+    return 1
+  fi
+  rm -f "$ARTIFACT_DIR/errors.txt"
+}
+
+cleanup() {
+  if [[ -n "$WESNOTH_PID" ]] && kill -0 "$WESNOTH_PID" 2>/dev/null; then
+    kill "$WESNOTH_PID" >/dev/null 2>&1 || true
+    wait "$WESNOTH_PID" >/dev/null 2>&1 || true
+  fi
+}
+
+error_check_outputs() {
+  local stdout_log="$ARTIFACT_DIR/stdout.log"
+  local stderr_log="$ARTIFACT_DIR/stderr.log"
+  if rg -n "error scripting/lua:|error wml:|error preprocessor:|error config:|error engine:|Error occured inside|traceback|critical|fatal" "$stdout_log" "$stderr_log" >"$ARTIFACT_DIR/errors.txt"; then
+    echo "Errors found in unit test output" >&2
+    cat "$ARTIFACT_DIR/errors.txt" >&2
+    return 1
+  fi
+  rm -f "$ARTIFACT_DIR/errors.txt"
+}
+
+trap cleanup EXIT INT TERM
+
+main() {
+  if [[ ! -x "$WESNOTH_BIN" ]]; then
+    echo "Missing Wesnoth binary: $WESNOTH_BIN" >&2
+    return 1
+  fi
+
+  if [[ -n "$WF_IMPORT_SAVE_PATH" && ! -f "$WF_IMPORT_SAVE_PATH" ]]; then
+    echo "Missing save to import: $WF_IMPORT_SAVE_PATH" >&2
+    return 1
+  fi
+
+  mkdir -p "$RUN_USERDATA_DIR/data/add-ons" "$RUN_USERDATA_DIR/saves" "$RUN_USERDATA_DIR/logs"
+  sync_addon
+  note_progress "addon_synced"
+
+  local run_dir
+  run_dir=$(resolve_workdir)
+
+  if [[ -n "$WF_UNIT_TEST_ID" ]]; then
+    local -a test_args
+    test_args=(
+      --userdata-dir "$RUN_USERDATA_DIR"
+      --strict-lua
+      --unit "$WF_UNIT_TEST_ID"
+      --no-log-to-file
+    )
+    if [[ "$WF_NOREPLAYCHECK" == "1" ]]; then
+      test_args+=(--noreplaycheck)
+    fi
+
+    note_progress "unit_test_started $WF_UNIT_TEST_ID"
+    (
+      cd "$run_dir"
+      "$WESNOTH_BIN" "${test_args[@]}"
+    ) >"$ARTIFACT_DIR/stdout.log" 2>"$ARTIFACT_DIR/stderr.log"
+    error_check_outputs
+    if ! rg -Fq "PASS TEST (0): $WF_UNIT_TEST_ID" "$ARTIFACT_DIR/stdout.log" "$ARTIFACT_DIR/stderr.log"; then
+      echo "Missing PASS TEST line for $WF_UNIT_TEST_ID" >&2
+      return 1
+    fi
+    note_progress "unit_test_complete $WF_UNIT_TEST_ID"
+
+    cat >"$ARTIFACT_DIR/result.txt" <<EOF
+userdata_dir=$RUN_USERDATA_DIR
+unit_test_id=$WF_UNIT_TEST_ID
+run_status=0
+EOF
+    return 0
+  fi
+
+  local load_save_name="$WF_LOAD_SAVE"
+  if [[ -z "$load_save_name" && -n "$WF_IMPORT_SAVE_PATH" ]]; then
+    load_save_name=${WF_IMPORT_SAVE_PATH:t}
+  fi
+  if [[ -z "$load_save_name" ]]; then
+    echo "WF_LOAD_SAVE or WF_IMPORT_SAVE_PATH is required" >&2
+    return 1
+  fi
+
+  if [[ -n "$WF_IMPORT_SAVE_PATH" ]]; then
+    import_save "$WF_IMPORT_SAVE_PATH" "$load_save_name"
+    note_progress "save_imported $load_save_name"
+  fi
+
+  local before_log
+  before_log=$(latest_log)
+
+  local -a launch_args
+  launch_args=(
+    --userdata-dir "$RUN_USERDATA_DIR"
+    --strict-lua
+    --windowed
+    --resolution "$WF_RESOLUTION"
+    --nosound
+    --nomusic
+    --nobanner
+    --load="$load_save_name"
+  )
+  if [[ "$WF_NOCACHE" == "1" ]]; then
+    launch_args=(--nocache "${launch_args[@]}")
+  fi
+
+  (
+    cd "$run_dir"
+    "$WESNOTH_BIN" "${launch_args[@]}"
+  ) >"$ARTIFACT_DIR/stdout.log" 2>"$ARTIFACT_DIR/stderr.log" &
+  WESNOTH_PID=$!
+  printf '%s\n' "$WESNOTH_PID" > "$ARTIFACT_DIR/pid.txt"
+  note_progress "app_launched pid=$WESNOTH_PID"
+
+  local run_log_name
+  run_log_name=$(wait_for_new_log "$before_log")
+  local log_path="$RUN_USERDATA_DIR/logs/$run_log_name"
+  note_progress "log_detected $run_log_name"
+
+  if [[ -n "$WF_LOAD_WAIT_PATTERN" ]]; then
+    wait_for_log_text "$log_path" "$WF_LOAD_WAIT_PATTERN" "$WF_TIMEOUT"
+    note_progress "load_pattern_seen"
+  fi
+
+  error_check "$log_path"
+  note_progress "error_check_clean"
+
+  cat >"$ARTIFACT_DIR/result.txt" <<EOF
+userdata_dir=$RUN_USERDATA_DIR
+load_save=$load_save_name
+log_name=$run_log_name
+log_path=$log_path
+wait_pattern=${WF_LOAD_WAIT_PATTERN:-}
+run_status=0
+EOF
+}
+
+main "$@"
