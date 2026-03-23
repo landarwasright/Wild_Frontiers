@@ -32,6 +32,8 @@ WF_LOAD_WAIT_PATTERN=${WF_LOAD_WAIT_PATTERN:-}
 WF_LOAD_STORY_MAX_PAGES=${WF_LOAD_STORY_MAX_PAGES:-12}
 WF_START_STORY_MAX_PAGES=${WF_START_STORY_MAX_PAGES:-12}
 WF_LOAD_END_TURNS=${WF_LOAD_END_TURNS:-0}
+WF_OVERRIDE_NEXT_SCENARIO=${WF_OVERRIDE_NEXT_SCENARIO:-}
+WF_CAPTURE_SAVE_NAME=${WF_CAPTURE_SAVE_NAME:-}
 WF_CHAIN_SCENARIO_2=${WF_CHAIN_SCENARIO_2:-}
 WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
 WF_CHAIN_SCENARIO_4=${WF_CHAIN_SCENARIO_4:-}
@@ -1742,6 +1744,11 @@ inject_debug_overlay() {
   ' "$scenario_path" > "$temp_path"
 
   mv "$temp_path" "$scenario_path"
+
+  if [[ -n "$WF_OVERRIDE_NEXT_SCENARIO" ]]; then
+    perl -0pi -e 's/^\s*next_scenario=.*/    next_scenario='"$WF_OVERRIDE_NEXT_SCENARIO"'/m' "$scenario_path"
+    perl -0pi -e 's/\{VARIABLE wf_vars\.next_scenario [^}]+\}/{VARIABLE wf_vars.next_scenario '"$WF_OVERRIDE_NEXT_SCENARIO"'}/g' "$scenario_path"
+  fi
 }
 
 inject_side_start_seed() {
@@ -1976,6 +1983,38 @@ wait_for_new_log() {
 
   echo "Timed out waiting for a new Wesnoth log" >&2
   return 1
+}
+
+get_saves_dir() {
+  local container=$1
+  printf '%s\n' "$container/Library/Application Support/wesnoth.org/iWesnoth/saves"
+}
+
+latest_non_replay_save() {
+  local save_dir=$1
+  ls -1t "$save_dir" 2>/dev/null | rg -Fv " replay " | head -n 1 || true
+}
+
+capture_save_copy() {
+  local container=$1
+  local save_dir=""
+  local source=""
+  local target="$WF_CAPTURE_SAVE_NAME"
+
+  save_dir=$(get_saves_dir "$container")
+  mkdir -p "$save_dir"
+  source=$(latest_non_replay_save "$save_dir")
+  if [[ -z "$source" ]]; then
+    echo "No non-replay save found to capture" >&2
+    return 1
+  fi
+  if [[ "$target" != *.* && "$source" == *.* ]]; then
+    target="${target}.${source##*.}"
+  fi
+  if [[ "$target" != "$source" ]]; then
+    cp -f "$save_dir/$source" "$save_dir/$target"
+  fi
+  printf '%s\n' "$target"
 }
 
 normalize_line_value() {
@@ -2522,6 +2561,13 @@ main() {
   local a_new_beginning_guardian=""
   local a_new_beginning_mage=""
   local a_new_beginning_prisoner=""
+  local captured_save_source=""
+  local captured_save=""
+  if [[ -n "$WF_CAPTURE_SAVE_NAME" ]]; then
+    captured_save_source=$(latest_non_replay_save "$(get_saves_dir "$container")")
+    captured_save=$(capture_save_copy "$container") || run_status=$?
+    note_progress "capture_save_complete status=$run_status file=$captured_save"
+  fi
   if [[ -n "$WF_LOAD_SAVE" ]]; then
     if [[ -n "$WF_LOAD_SCENARIO" ]]; then
       load_reached_turn=$(extract_log_turn "$log_path" "$WF_LOAD_SCENARIO")
@@ -2853,6 +2899,8 @@ main() {
     echo "load_save=$WF_LOAD_SAVE"
     echo "load_reached_turn=$load_reached_turn"
     echo "load_pattern_seen=$load_pattern_seen"
+    echo "captured_save_source=$captured_save_source"
+    echo "captured_save=$captured_save"
     echo "next_turns=$WF_NEXT_END_TURNS"
     echo "next_reached_turn=$next_reached_turn"
     echo "autumn_reached_turn=$autumn_reached_turn"
