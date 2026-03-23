@@ -7,7 +7,7 @@ ROOT_DIR=${SCRIPT_DIR:h:h}
 
 WESNOTH_BIN=${WESNOTH_BIN:-/Users/neilhiddink/github/wesnoth/Wesnoth.app/Contents/MacOS/Wesnoth}
 WESNOTH_WORKDIR=${WESNOTH_WORKDIR:-}
-WF_ADDON_NAME=${WF_ADDON_NAME:-Wild_Frontiers_LWR}
+WF_ADDON_NAME=${WF_ADDON_NAME:-Wild_Frontiers}
 WF_INSTALL_MODE=${WF_INSTALL_MODE:-sync}
 WF_UNIT_TEST_ID=${WF_UNIT_TEST_ID:-}
 WF_IMPORT_SAVE_PATH=${WF_IMPORT_SAVE_PATH:-}
@@ -21,11 +21,12 @@ WF_ARTIFACT_ROOT=${WF_ARTIFACT_ROOT:-$ROOT_DIR/working/desktop-smoke}
 WF_PACKAGE_PATH=${WF_PACKAGE_PATH:-}
 
 timestamp=$(date +"%Y%m%d-%H%M%S")
-mkdir -p "$WF_ARTIFACT_ROOT"
-ARTIFACT_DIR=$(mktemp -d "$WF_ARTIFACT_ROOT/${timestamp}.XXXXXX")
+ARTIFACT_DIR="$WF_ARTIFACT_ROOT/$timestamp"
 RUN_USERDATA_DIR="$ARTIFACT_DIR/userdata"
 WESNOTH_PID=""
 PACKAGE_PATH_USED=""
+
+mkdir -p "$ARTIFACT_DIR"
 
 note_progress() {
   local message=$1

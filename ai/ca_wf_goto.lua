@@ -1,5 +1,5 @@
 -- goto with check if unit_in_way and no AH.checked_stopunit_moves(ai, best_unit)
-local H = wesnoth.require "~add-ons/Wild_Frontiers_LWR/lua/wf_helper.lua"
+local H = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 local AH = wesnoth.require "ai/lua/ai_helper.lua"
 local BC = wesnoth.require "ai/lua/battle_calcs.lua"
 local LS = wesnoth.require "location_set"

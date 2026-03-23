@@ -1,5 +1,5 @@
 -- Lifed from: campaigns/The_Hammer_of_Thursagan/lua/spawns.lua
-local helper = wesnoth.require "~add-ons/Wild_Frontiers_LWR/lua/wf_helper.lua"
+local helper = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 local utils = wesnoth.require "lua/wml-utils.lua"
 local wml_actions = wesnoth.wml_actions
 local T = wml.tag

@@ -8,7 +8,7 @@ http://forums.wesnoth.org/viewtopic.php?t=28306&p=414894
 --]]
 
 -- Save and load the map using a WML variable
-local helper = wesnoth.require "~add-ons/Wild_Frontiers_LWR/lua/wf_helper.lua"
+local helper = wesnoth.require "~add-ons/Wild_Frontiers/lua/wf_helper.lua"
 
 local function get_map_size()
   local map = wesnoth.current.map
