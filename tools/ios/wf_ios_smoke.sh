@@ -28,6 +28,7 @@ WF_LOAD_SAVE=${WF_LOAD_SAVE:-}
 WF_LOAD_SCENARIO=${WF_LOAD_SCENARIO:-}
 WF_LOAD_WAIT_PATTERN=${WF_LOAD_WAIT_PATTERN:-}
 WF_LOAD_STORY_MAX_PAGES=${WF_LOAD_STORY_MAX_PAGES:-12}
+WF_START_STORY_MAX_PAGES=${WF_START_STORY_MAX_PAGES:-12}
 WF_LOAD_END_TURNS=${WF_LOAD_END_TURNS:-0}
 WF_CHAIN_SCENARIO_2=${WF_CHAIN_SCENARIO_2:-}
 WF_CHAIN_SCENARIO_3=${WF_CHAIN_SCENARIO_3:-}
@@ -1741,17 +1742,113 @@ inject_debug_overlay() {
   mv "$temp_path" "$scenario_path"
 }
 
+inject_side_start_seed() {
+  local scenario_path=$1
+  local scenario_id=$2
+  local macro_name=$3
+  local temp_path="$scenario_path.seed"
+
+  awk -v scenario_id="$scenario_id" -v macro_name="$macro_name" '
+    index($0, "{" macro_name "}") && !inserted {
+      print "    [event]"
+      print "        name=prestart"
+      print "        [if]"
+      print "            [not]"
+      print "                [variable]"
+      print "                    name=old_hero_store.id"
+      print "                    not_equals=\"\""
+      print "                [/variable]"
+      print "            [/not]"
+      print "            [then]"
+      print "                [store_starting_location]"
+      print "                    side=1"
+      print "                    variable=wf_automation.direct_start_loc"
+      print "                [/store_starting_location]"
+      print "                [unit]"
+      print "                    id=Hero"
+      print "                    save_id=Hero"
+      print "                    name= _ \"Hero\""
+      print "                    side=1"
+      print "                    type=Sergeant"
+      print "                    canrecruit=yes"
+      print "                    random_traits=no"
+      print "                    upkeep=loyal"
+      print "                    x,y=$wf_automation.direct_start_loc.x,$wf_automation.direct_start_loc.y"
+      print "                [/unit]"
+      print "                [store_unit]"
+      print "                    variable=old_hero_store"
+      print "                    mode=always_clear"
+      print "                    kill=yes"
+      print "                    [filter]"
+      print "                        id=Hero"
+      print "                    [/filter]"
+      print "                [/store_unit]"
+      print "                [lua]"
+      print "                    code=<<"
+      print "                        wesnoth.log(\"warning\", \"WF_AUTOMATION seeded_old_hero_store scenario=" scenario_id " type=\" .. tostring(wml.variables[\"old_hero_store.type\"] or \"\"))"
+      print "                    >>"
+      print "                [/lua]"
+      print "                [clear_variable]"
+      print "                    name=wf_automation.direct_start_loc"
+      print "                [/clear_variable]"
+      print "            [/then]"
+      print "        [/if]"
+      print "    [/event]"
+      print ""
+      inserted=1
+    }
+    { print }
+  ' "$scenario_path" > "$temp_path"
+
+  mv "$temp_path" "$scenario_path"
+}
+
 sync_addon() {
   local container=$1
   local addon_dir="$container/Library/Application Support/wesnoth.org/iWesnoth/data/add-ons/$WF_ADDON_NAME"
   mkdir -p "$addon_dir"
   rsync -a --delete --exclude='.git/' "$ROOT_DIR/" "$addon_dir/"
+  perl -0pi -e 's/^\s*first_scenario=.*/    first_scenario='"$WF_START_SCENARIO"'/m' "$addon_dir/_main.cfg"
   if [[ "$WF_USE_DEBUG_OVERLAY" == "1" ]]; then
-    inject_debug_overlay "$addon_dir/scenarios/a_new_beginning.cfg" "A_New_Beginning"
-    inject_debug_overlay "$addon_dir/scenarios/summer_of_dreams.cfg" "Summer_of_Dreams"
-    inject_debug_overlay "$addon_dir/scenarios/autumn_of_gold.cfg" "Autumn_of_Gold"
-    inject_debug_overlay "$addon_dir/scenarios/winter_of_storms.cfg" "Winter_of_Storms"
-    inject_debug_overlay "$addon_dir/scenarios/spring_of_raindrops.cfg" "Spring_of_Raindrops"
+    local -a overlay_scenarios=(
+      "a_new_beginning.cfg:A_New_Beginning"
+      "summer_of_dreams.cfg:Summer_of_Dreams"
+      "autumn_of_gold.cfg:Autumn_of_Gold"
+      "winter_of_storms.cfg:Winter_of_Storms"
+      "spring_of_raindrops.cfg:Spring_of_Raindrops"
+      "Hidden_Cave.cfg:Hidden_Cave"
+      "Underground.cfg:Underground"
+      "Fief_Uprising.cfg:Fief_Uprising"
+      "Spring_Guardians.cfg:Spring_Guardians"
+      "Raid_Spring.cfg:Raid_Spring"
+      "Fief_Fall.cfg:Fief_Fall"
+      "Fall_Guardians.cfg:Fall_Guardians"
+      "Raid_Fall.cfg:Raid_Fall"
+      "Trek_H.cfg:Trek_H"
+      "Trek_V.cfg:Trek_V"
+      "Cave_Tunnel.cfg:Cave_Tunnel"
+      "Indoors.cfg:Indoors"
+    )
+    local entry=""
+    local scenario_file=""
+    local scenario_id=""
+    for entry in "${overlay_scenarios[@]}"; do
+      scenario_file=${entry%%:*}
+      scenario_id=${entry#*:}
+      inject_debug_overlay "$addon_dir/scenarios/$scenario_file" "$scenario_id"
+    done
+    inject_side_start_seed "$addon_dir/scenarios/Hidden_Cave.cfg" "Hidden_Cave" "WF_SCENE_DRAGON"
+    inject_side_start_seed "$addon_dir/scenarios/Underground.cfg" "Underground" "WF_SCENE_CAVE"
+    inject_side_start_seed "$addon_dir/scenarios/Fief_Uprising.cfg" "Fief_Uprising" "WF_SCENE_UPRISING"
+    inject_side_start_seed "$addon_dir/scenarios/Spring_Guardians.cfg" "Spring_Guardians" "WF_SCENE_GUARDIAN"
+    inject_side_start_seed "$addon_dir/scenarios/Raid_Spring.cfg" "Raid_Spring" "WF_SCENE_RAID"
+    inject_side_start_seed "$addon_dir/scenarios/Fief_Fall.cfg" "Fief_Fall" "WF_SCENE_UPRISING"
+    inject_side_start_seed "$addon_dir/scenarios/Fall_Guardians.cfg" "Fall_Guardians" "WF_SCENE_GUARDIAN"
+    inject_side_start_seed "$addon_dir/scenarios/Raid_Fall.cfg" "Raid_Fall" "WF_SCENE_RAID"
+    inject_side_start_seed "$addon_dir/scenarios/Trek_H.cfg" "Trek_H" "WF_SCENE_TREK"
+    inject_side_start_seed "$addon_dir/scenarios/Trek_V.cfg" "Trek_V" "WF_SCENE_TREK"
+    inject_side_start_seed "$addon_dir/scenarios/Cave_Tunnel.cfg" "Cave_Tunnel" "WF_SCENE_CAVE_TREK"
+    inject_side_start_seed "$addon_dir/scenarios/Indoors.cfg" "Indoors" "WF_SCENE_INDOOR"
     apply_runtime_overrides "$addon_dir"
   fi
 }
@@ -2026,23 +2123,35 @@ main() {
     fi
     note_progress "startup_complete"
   else
-    wait_for_text "Which type would you like to use?" "economy-dialog" 180
+    if [[ "$WF_START_SCENARIO" == "A_New_Beginning" ]]; then
+      wait_for_text "Which type would you like to use?" "economy-dialog" 180
 
-    send_key return
-    wait_for_text "Nevermind" "bonus-dialog" 90
+      send_key return
+      wait_for_text "Nevermind" "bonus-dialog" 90
 
-    send_key down "$WF_BONUS_DOWN_COUNT"
-    send_key return
-    send_key return
-    wait_until_clear "post-start" 120 \
-      "Which type would you like to use?" \
-      "Nevermind" \
-      "Starting game..." \
-      "Reading files and creating cache..."
-    note_progress "startup_complete"
+      send_key down "$WF_BONUS_DOWN_COUNT"
+      send_key return
+      send_key return
+      wait_until_clear "post-start" 120 \
+        "Which type would you like to use?" \
+        "Nevermind" \
+        "Starting game..." \
+        "Reading files and creating cache..."
+      note_progress "startup_complete"
+    else
+      advance_story_screens "$WF_START_STORY_MAX_PAGES" || run_status=$?
+      note_progress "start_story_complete status=$run_status"
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION overlay_ready scenario=$WF_START_SCENARIO" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "start_overlay_ready status=$run_status"
+      wait_for_log_text_with_return "$log_path" "WF_AUTOMATION side1_turn_refresh scenario=$WF_START_SCENARIO turn=1" "$WF_SCENARIO_END_TIMEOUT" || run_status=$?
+      note_progress "start_turn1 status=$run_status"
+      note_progress "startup_complete"
+    fi
 
-    advance_turns "$log_path" "$WF_END_TURNS" "$WF_START_SCENARIO" "turn" || run_status=$?
-    note_progress "start_scenario_complete status=$run_status"
+    if (( WF_END_TURNS > 0 )); then
+      advance_turns "$log_path" "$WF_END_TURNS" "$WF_START_SCENARIO" "turn" || run_status=$?
+      note_progress "start_scenario_complete status=$run_status"
+    fi
   fi
 
   if [[ -n "$WF_LOAD_SAVE" ]]; then
